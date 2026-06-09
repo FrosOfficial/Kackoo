@@ -15,12 +15,13 @@ import { getCurrentWeek } from "./weekLogic";
 async function ensureChannel() {
   if (Platform.OS === "android") {
     await notifee.createChannel({
-      id: "class-alarm-v3",
+      id: "class-alarm-v4",
       name: "Class Alarms",
       importance: AndroidImportance.HIGH,
       vibration: true,
       vibrationPattern: [500, 250, 500, 250],
-      sound: "default",
+      sound: "alarm",
+      bypassDnd: true,
     });
   }
 }
@@ -127,10 +128,10 @@ export async function scheduleWeekAlarms() {
           title: `⏰ ${cls.code} in ${minutesLeft} minutes!`,
           body,
           android: {
-            channelId: "class-alarm-v3",
+            channelId: "class-alarm-v4",
             category: AndroidCategory.ALARM,
             importance: AndroidImportance.HIGH,
-            sound: "default",
+            sound: "alarm",
             vibrationPattern: [500, 250, 500, 250],
             loopSound: true,
             ongoing: true,
@@ -177,10 +178,10 @@ export async function scheduleTestAlarm() {
         title: "⏰ Kackoo Test Alarm",
         body: "If you see this, your alarm configuration is working perfectly!",
         android: {
-          channelId: "class-alarm-v3",
+          channelId: "class-alarm-v4",
           category: AndroidCategory.ALARM,
           importance: AndroidImportance.HIGH,
-          sound: "default",
+          sound: "alarm",
           vibrationPattern: [500, 250, 500, 250],
           loopSound: true,
           ongoing: true,

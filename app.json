@@ -29,7 +29,8 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      "./plugins/withRawResource"
     ],
     "extra": {
       "eas": {
