@@ -94,9 +94,12 @@ export async function scheduleWeekAlarms() {
       const time = parseTime(cls.start);
       if (!time) continue;
 
-      // Build the trigger date: 15 minutes before class
+      // 5 minutes before for online, 15 minutes before for in-person
+      const minutesLeft = isOnline ? 5 : 15;
+
+      // Build the trigger date
       const triggerDate = new Date(targetDate);
-      triggerDate.setHours(time.hours, time.minutes - 15, 0, 0);
+      triggerDate.setHours(time.hours, time.minutes - minutesLeft, 0, 0);
 
       // Skip if this time has already passed
       if (triggerDate <= now) continue;
@@ -112,7 +115,7 @@ export async function scheduleWeekAlarms() {
       // Schedule the alarm using notifee
       await notifee.createTriggerNotification(
         {
-          title: `⏰ ${cls.code} in 15 minutes!`,
+          title: `⏰ ${cls.code} in ${minutesLeft} minutes!`,
           body,
           android: {
             channelId: "class-alarm",
@@ -147,33 +150,39 @@ export async function scheduleWeekAlarms() {
 export async function scheduleTestAlarm() {
   await ensureChannel();
   const triggerTime = Date.now() + 10000; // 10 seconds from now
+  console.log("Scheduling test alarm for:", new Date(triggerTime).toTimeString());
 
-  await notifee.createTriggerNotification(
-    {
-      title: "⏰ Kackoo Test Alarm",
-      body: "If you see this, your alarm configuration is working perfectly!",
-      android: {
-        channelId: "class-alarm",
-        category: AndroidCategory.ALARM,
-        importance: AndroidImportance.HIGH,
-        sound: "default",
-        vibrationPattern: [0, 500, 250, 500, 250, 500],
-        fullScreenAction: {
-          id: "default",
+  try {
+    await notifee.createTriggerNotification(
+      {
+        title: "⏰ Kackoo Test Alarm",
+        body: "If you see this, your alarm configuration is working perfectly!",
+        android: {
+          channelId: "class-alarm",
+          category: AndroidCategory.ALARM,
+          importance: AndroidImportance.HIGH,
+          sound: "default",
+          vibrationPattern: [0, 500, 250, 500, 250, 500],
+          fullScreenAction: {
+            id: "default",
+          },
+          pressAction: {
+            id: "default",
+          },
+          autoCancel: true,
         },
-        pressAction: {
-          id: "default",
+      },
+      {
+        type: TriggerType.TIMESTAMP,
+        timestamp: triggerTime,
+        alarmManager: {
+          type: AlarmType.SET_EXACT_AND_ALLOW_WHILE_IDLE,
         },
-        autoCancel: true,
-      },
-    },
-    {
-      type: TriggerType.TIMESTAMP,
-      timestamp: triggerTime,
-      alarmManager: {
-        type: AlarmType.SET_EXACT_AND_ALLOW_WHILE_IDLE,
-      },
-    }
-  );
+      }
+    );
+    console.log("Test alarm successfully scheduled!");
+  } catch (err) {
+    console.error("Failed to schedule test alarm:", err);
+  }
 }
 
