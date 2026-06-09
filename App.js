@@ -9,6 +9,7 @@ import {
   StatusBar,
   AppState,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -29,11 +30,34 @@ export default function App() {
   const todayName = getDayName(now);
   const [selectedDay, setSelectedDay] = useState(todayName);
   const [weekInfo, setWeekInfo] = useState(() => getCurrentWeek(now));
+  const [isAlarmActive, setIsAlarmActive] = useState(false);
+
+  // Stop alarm and cancel notification
+  const handleStopAlarm = async () => {
+    try {
+      console.log("Stopping alarm from button click...");
+      AlarmModule.stopAlarm();
+      setIsAlarmActive(false);
+      await notifee.cancelAllNotifications();
+      await scheduleWeekAlarms(); // reschedule remaining alarms
+    } catch (err) {
+      console.error("Error stopping alarm:", err);
+    }
+  };
 
   // Initialize week info and notifications on mount
   useEffect(() => {
     const info = getCurrentWeek(now);
     setWeekInfo(info);
+
+    const checkAlarmStatus = async () => {
+      try {
+        const playing = await AlarmModule.isAlarmPlaying();
+        setIsAlarmActive(playing);
+      } catch (err) {
+        console.error("Error checking alarm status:", err);
+      }
+    };
 
     // Request permissions and schedule alarms
     (async () => {
@@ -42,6 +66,7 @@ export default function App() {
         await scheduleWeekAlarms();
         await scheduleTestAlarm();
       }
+      checkAlarmStatus();
     })();
 
     // Handle alarm trigger/dismiss in foreground
@@ -52,6 +77,7 @@ export default function App() {
       if (type === EventType.DELIVERED) {
         console.log("Alarm triggered in foreground! Playing audio...");
         AlarmModule.playAlarm();
+        setIsAlarmActive(true);
       } else if (
         (type === EventType.ACTION_PRESS && pressAction?.id === "dismiss-alarm") ||
         type === EventType.DISMISSED ||
@@ -59,6 +85,7 @@ export default function App() {
       ) {
         console.log("Stopping alarm stream audio from foreground...");
         AlarmModule.stopAlarm();
+        setIsAlarmActive(false);
         await notifee.cancelNotification(notification.id);
       }
     });
@@ -68,6 +95,7 @@ export default function App() {
       if (state === "active") {
         setWeekInfo(getCurrentWeek(new Date()));
         scheduleWeekAlarms();
+        checkAlarmStatus();
       }
     });
 
@@ -148,7 +176,7 @@ export default function App() {
             <ScrollView
               className="flex-1"
               contentContainerStyle={
-                classes.length === 0 ? { flex: 1 } : { paddingBottom: 32 }
+                classes.length === 0 ? { flex: 1 } : { paddingBottom: isAlarmActive ? 100 : 32 }
               }
               showsVerticalScrollIndicator={false}
             >
@@ -162,6 +190,28 @@ export default function App() {
             </ScrollView>
           </View>
         </GestureDetector>
+
+        {/* Floating STOP ALARM button */}
+        {isAlarmActive && (
+          <View className="absolute bottom-6 left-4 right-4 bg-red-600 rounded-2xl overflow-hidden shadow-2xl">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={handleStopAlarm}
+              className="py-4 items-center justify-center bg-red-600"
+              style={{
+                shadowColor: "#dc2626",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.5,
+                shadowRadius: 12,
+                elevation: 10,
+              }}
+            >
+              <Text className="text-white text-lg font-bold tracking-wider">
+                ⏰ Ringing - Tap to Stop Alarm
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </SafeAreaView>
     </GestureHandlerRootView>
     </SafeAreaProvider>

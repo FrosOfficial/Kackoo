@@ -64,4 +64,14 @@ public class AlarmModule extends ReactContextBaseJavaModule {
             }
         }
     }
+
+    @ReactMethod
+    public void isAlarmPlaying(com.facebook.react.bridge.Promise promise) {
+        try {
+            boolean playing = (mediaPlayer != null && mediaPlayer.isPlaying());
+            promise.resolve(playing);
+        } catch (Exception e) {
+            promise.reject("ERROR", e.getMessage());
+        }
+    }
 }
