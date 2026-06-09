@@ -7,6 +7,7 @@ import notifee, {
 import { Platform } from "react-native";
 import { SCHEDULE } from "../data/scheduleData";
 import { getCurrentWeek } from "./weekLogic";
+import { loadSchedule } from "./storage";
 
 /**
  * Create the alarm notification channel (Android only).
@@ -89,6 +90,8 @@ export async function scheduleWeekAlarms() {
 
   await ensureChannel();
 
+  const scheduleData = await loadSchedule();
+
   // Schedule alarms for each remaining day in the week
   for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
     const targetDate = new Date(now);
@@ -98,7 +101,7 @@ export async function scheduleWeekAlarms() {
     const dayNameMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const scheduleDayName = dayNameMap[jsDayIndex];
 
-    const classes = SCHEDULE[scheduleDayName] || [];
+    const classes = scheduleData[scheduleDayName] || [];
 
     for (const cls of classes) {
       const time = parseTime(cls.start);

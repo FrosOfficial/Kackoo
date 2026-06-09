@@ -10,6 +10,9 @@ import {
   AppState,
   Dimensions,
   TouchableOpacity,
+  Modal,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -24,6 +27,9 @@ import WeekBadge from "./components/WeekBadge";
 import DaySelector from "./components/DaySelector";
 import ClassCard from "./components/ClassCard";
 import EmptyDay from "./components/EmptyDay";
+import { loadSchedule, saveSchedule, resetSchedule, loadApiKey, saveApiKey } from "./utils/storage";
+import { parseScheduleImage } from "./utils/geminiParser";
+import * as ImagePicker from "expo-image-picker";
 
 export default function App() {
   const [now] = useState(new Date());
@@ -31,6 +37,10 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(todayName);
   const [weekInfo, setWeekInfo] = useState(() => getCurrentWeek(now));
   const [isAlarmActive, setIsAlarmActive] = useState(false);
+  const [schedule, setSchedule] = useState(SCHEDULE);
+  const [apiKey, setApiKey] = useState("");
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
 
   // Stop alarm and cancel notification
   const handleStopAlarm = async () => {
@@ -45,10 +55,81 @@ export default function App() {
     }
   };
 
+  // Pick an image of the schedule and parse it using Gemini
+  const handlePickImage = async () => {
+    if (!apiKey) {
+      alert("Please enter your Gemini API key in Settings first!");
+      return;
+    }
+
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      alert("Permission to access the media library is required!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      const base64 = asset.base64;
+      
+      const filename = asset.uri.split("/").pop();
+      const match = /\.(\w+)$/.exec(filename || "");
+      const type = match ? `image/${match[1]}` : "image";
+      const mimeType = asset.mimeType || type;
+      
+      setIsParsing(true);
+      try {
+        const parsed = await parseScheduleImage(base64, mimeType, apiKey);
+        if (parsed && typeof parsed === "object") {
+          await saveSchedule(parsed);
+          setSchedule(parsed);
+          await scheduleWeekAlarms(); // reschedule all alarms
+          alert("Schedule updated successfully!");
+          setIsSettingsVisible(false);
+        } else {
+          throw new Error("Invalid schedule format returned.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to parse schedule: " + err.message);
+      } finally {
+        setIsParsing(false);
+      }
+    }
+  };
+
+  // Reset custom schedule to default
+  const handleResetSchedule = async () => {
+    try {
+      await resetSchedule();
+      const defaultSchedule = await loadSchedule();
+      setSchedule(defaultSchedule);
+      await scheduleWeekAlarms();
+      alert("Schedule reset to default!");
+      setIsSettingsVisible(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to reset schedule: " + err.message);
+    }
+  };
+
   // Initialize week info and notifications on mount
   useEffect(() => {
     const info = getCurrentWeek(now);
     setWeekInfo(info);
+
+    const initApp = async () => {
+      const storedSchedule = await loadSchedule();
+      setSchedule(storedSchedule);
+      const storedKey = await loadApiKey();
+      setApiKey(storedKey);
+    };
 
     const checkAlarmStatus = async () => {
       try {
@@ -61,6 +142,7 @@ export default function App() {
 
     // Request permissions and schedule alarms
     (async () => {
+      await initApp();
       const granted = await requestPermissions();
       if (granted) {
         await scheduleWeekAlarms();
@@ -121,7 +203,7 @@ export default function App() {
     })
     .runOnJS(true);
 
-  const classes = SCHEDULE[selectedDay] || [];
+  const classes = schedule[selectedDay] || [];
   const isToday = selectedDay === todayName;
 
   // Format today's date
@@ -140,9 +222,19 @@ export default function App() {
         <GestureDetector gesture={swipeGesture}>
           <View className="flex-1">
             {/* Header */}
-            <View className="px-5 pt-14 pb-2">
-              <Text className="text-white text-3xl font-bold">Kackoo</Text>
-              <Text className="text-gray-500 text-sm mt-1">{dateStr}</Text>
+            <View className="px-5 pt-14 pb-2 flex-row items-center justify-between">
+              <View>
+                <Text className="text-white text-3xl font-bold">Kackoo</Text>
+                <Text className="text-gray-500 text-sm mt-1">{dateStr}</Text>
+              </View>
+              {/* Settings button */}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setIsSettingsVisible(true)}
+                className="w-10 h-10 rounded-full bg-surface-700 items-center justify-center border border-white/5"
+              >
+                <Text className="text-lg">⚙️</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Week badge */}
@@ -212,6 +304,76 @@ export default function App() {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Settings Modal */}
+        <Modal
+          visible={isSettingsVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsSettingsVisible(false)}
+        >
+          <View className="flex-1 justify-end bg-black/60">
+            <View className="bg-surface-800 rounded-t-3xl p-6 border-t border-white/10" style={{ maxHeight: "80%" }}>
+              <View className="flex-row justify-between items-center mb-6">
+                <Text className="text-white text-xl font-bold">Kackoo Settings</Text>
+                <TouchableOpacity
+                  onPress={() => setIsSettingsVisible(false)}
+                  className="w-8 h-8 rounded-full bg-surface-700 items-center justify-center"
+                >
+                  <Text className="text-white text-sm font-bold">✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text className="text-gray-400 text-sm font-semibold mb-2">Gemini API Key</Text>
+              <TextInput
+                secureTextEntry
+                placeholder="Paste your Gemini API key..."
+                placeholderTextColor="#4b5563"
+                value={apiKey}
+                onChangeText={(text) => {
+                  setApiKey(text);
+                  saveApiKey(text);
+                }}
+                className="bg-surface-700 text-white px-4 py-3 rounded-2xl mb-6 border border-white/5"
+              />
+
+              {isParsing ? (
+                <View className="py-6 items-center">
+                  <ActivityIndicator size="large" color="#06b6d4" />
+                  <Text className="text-cyan-400 text-sm font-medium mt-4">
+                    Gemini is reading your schedule...
+                  </Text>
+                </View>
+              ) : (
+                <View className="gap-3">
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handlePickImage}
+                    className="bg-cyan-500 py-4 rounded-2xl items-center"
+                  >
+                    <Text className="text-surface-900 text-base font-bold">
+                      📸 Upload Schedule Image
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handleResetSchedule}
+                    className="bg-surface-700 py-4 rounded-2xl items-center border border-white/5"
+                  >
+                    <Text className="text-red-400 text-base font-semibold">
+                      Reset to Default Schedule
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <Text className="text-gray-500 text-xs text-center mt-6 leading-4">
+                Get a free API key from Google AI Studio. The image will be processed securely using Gemini 1.5 Flash.
+              </Text>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </GestureHandlerRootView>
     </SafeAreaProvider>
