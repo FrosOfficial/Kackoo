@@ -15,7 +15,7 @@ import { getCurrentWeek } from "./weekLogic";
 async function ensureChannel() {
   if (Platform.OS === "android") {
     await notifee.createChannel({
-      id: "class-alarm",
+      id: "class-alarm-v3",
       name: "Class Alarms",
       importance: AndroidImportance.HIGH,
       vibration: true,
@@ -127,18 +127,28 @@ export async function scheduleWeekAlarms() {
           title: `⏰ ${cls.code} in ${minutesLeft} minutes!`,
           body,
           android: {
-            channelId: "class-alarm",
+            channelId: "class-alarm-v3",
             category: AndroidCategory.ALARM,
             importance: AndroidImportance.HIGH,
             sound: "default",
             vibrationPattern: [500, 250, 500, 250],
+            loopSound: true,
+            ongoing: true,
+            autoCancel: false,
             fullScreenAction: {
               id: "default",
             },
             pressAction: {
               id: "default",
             },
-            autoCancel: true,
+            actions: [
+              {
+                title: "Dismiss",
+                pressAction: {
+                  id: "dismiss-alarm",
+                },
+              },
+            ],
           },
         },
         {
@@ -167,18 +177,28 @@ export async function scheduleTestAlarm() {
         title: "⏰ Kackoo Test Alarm",
         body: "If you see this, your alarm configuration is working perfectly!",
         android: {
-          channelId: "class-alarm",
+          channelId: "class-alarm-v3",
           category: AndroidCategory.ALARM,
           importance: AndroidImportance.HIGH,
           sound: "default",
           vibrationPattern: [500, 250, 500, 250],
+          loopSound: true,
+          ongoing: true,
+          autoCancel: false,
           fullScreenAction: {
             id: "default",
           },
           pressAction: {
             id: "default",
           },
-          autoCancel: true,
+          actions: [
+            {
+              title: "Dismiss",
+              pressAction: {
+                id: "dismiss-alarm",
+              },
+            },
+          ],
         },
       },
       {

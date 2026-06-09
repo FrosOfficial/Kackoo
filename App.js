@@ -1,5 +1,6 @@
 import "./global.css";
 import React, { useState, useEffect } from "react";
+import notifee, { EventType } from "@notifee/react-native";
 import {
   View,
   Text,
@@ -42,6 +43,14 @@ export default function App() {
       }
     })();
 
+    // Dismiss alarm from foreground
+    const unsubscribeForeground = notifee.onForegroundEvent(async ({ type, detail }) => {
+      const { notification, pressAction } = detail;
+      if (type === EventType.ACTION_PRESS && pressAction?.id === "dismiss-alarm") {
+        await notifee.cancelNotification(notification.id);
+      }
+    });
+
     // Re-schedule alarms when app comes back to foreground
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") {
@@ -50,7 +59,10 @@ export default function App() {
       }
     });
 
-    return () => sub.remove();
+    return () => {
+      sub.remove();
+      unsubscribeForeground();
+    };
   }, []);
 
   // Swipe gesture to navigate days
