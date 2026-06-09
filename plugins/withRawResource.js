@@ -1,5 +1,5 @@
 const { withDangerousMod } = require("@expo/config-plugins");
-const fs = require("fs-extra");
+const fs = require("fs");
 const path = require("path");
 
 const withRawResource = (config) => {
@@ -13,11 +13,13 @@ const withRawResource = (config) => {
       const destFile = path.join(rawDir, "alarm.wav");
 
       // Ensure directory exists
-      await fs.ensureDir(rawDir);
+      if (!fs.existsSync(rawDir)) {
+        fs.mkdirSync(rawDir, { recursive: true });
+      }
 
       // Copy file if source exists
-      if (await fs.pathExists(sourceFile)) {
-        await fs.copyFile(sourceFile, destFile);
+      if (fs.existsSync(sourceFile)) {
+        fs.copyFileSync(sourceFile, destFile);
         console.log("Copied alarm.wav to Android resources folder successfully.");
       } else {
         console.warn("Source alarm.wav not found at path:", sourceFile);
