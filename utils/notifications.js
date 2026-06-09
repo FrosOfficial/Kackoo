@@ -19,7 +19,7 @@ async function ensureChannel() {
       name: "Class Alarms",
       importance: AndroidImportance.HIGH,
       vibration: true,
-      vibrationPattern: [0, 500, 250, 500, 250, 500],
+      vibrationPattern: [500, 250, 500, 250],
       sound: "default",
     });
   }
@@ -131,7 +131,7 @@ export async function scheduleWeekAlarms() {
             category: AndroidCategory.ALARM,
             importance: AndroidImportance.HIGH,
             sound: "default",
-            vibrationPattern: [0, 500, 250, 500, 250, 500],
+            vibrationPattern: [500, 250, 500, 250],
             fullScreenAction: {
               id: "default",
             },
@@ -171,7 +171,7 @@ export async function scheduleTestAlarm() {
           category: AndroidCategory.ALARM,
           importance: AndroidImportance.HIGH,
           sound: "default",
-          vibrationPattern: [0, 500, 250, 500, 250, 500],
+          vibrationPattern: [500, 250, 500, 250],
           fullScreenAction: {
             id: "default",
           },
