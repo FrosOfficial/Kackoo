@@ -1,0 +1,13 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdk 34
+    namespace "com.fros.kackoo.alarm"
+    defaultConfig {
+        minSdk 23
+    }
+}
+
+dependencies {
+    implementation "com.facebook.react:react-android"
+}

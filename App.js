@@ -1,6 +1,7 @@
 import "./global.css";
 import React, { useState, useEffect } from "react";
 import notifee, { EventType } from "@notifee/react-native";
+import AlarmModule from "alarm-module";
 import {
   View,
   Text,
@@ -43,10 +44,21 @@ export default function App() {
       }
     })();
 
-    // Dismiss alarm from foreground
+    // Handle alarm trigger/dismiss in foreground
     const unsubscribeForeground = notifee.onForegroundEvent(async ({ type, detail }) => {
       const { notification, pressAction } = detail;
-      if (type === EventType.ACTION_PRESS && pressAction?.id === "dismiss-alarm") {
+      console.log("Foreground event received:", type);
+
+      if (type === EventType.DELIVERED) {
+        console.log("Alarm triggered in foreground! Playing audio...");
+        AlarmModule.playAlarm();
+      } else if (
+        (type === EventType.ACTION_PRESS && pressAction?.id === "dismiss-alarm") ||
+        type === EventType.DISMISSED ||
+        type === EventType.PRESS
+      ) {
+        console.log("Stopping alarm stream audio from foreground...");
+        AlarmModule.stopAlarm();
         await notifee.cancelNotification(notification.id);
       }
     });

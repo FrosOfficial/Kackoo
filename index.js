@@ -1,12 +1,24 @@
 import { registerRootComponent } from 'expo';
 import notifee, { EventType } from '@notifee/react-native';
+import AlarmModule from 'alarm-module';
 
 import App from './App';
 
-// Handle alarm dismiss from background/lockscreen
+// Handle alarm triggers and dismiss from background/lockscreen
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
-  if (type === EventType.ACTION_PRESS && pressAction?.id === 'dismiss-alarm') {
+  console.log("Background event received:", type);
+
+  if (type === EventType.DELIVERED) {
+    console.log("Alarm triggered! Playing alarm stream audio...");
+    AlarmModule.playAlarm();
+  } else if (
+    (type === EventType.ACTION_PRESS && pressAction?.id === 'dismiss-alarm') ||
+    type === EventType.DISMISSED ||
+    type === EventType.PRESS
+  ) {
+    console.log("Stopping alarm stream audio...");
+    AlarmModule.stopAlarm();
     await notifee.cancelNotification(notification.id);
   }
 });

@@ -4,6 +4,7 @@
   "main": "index.js",
   "dependencies": {
     "@notifee/react-native": "^9.1.8",
+    "alarm-module": "file:./modules/alarm",
     "babel-preset-expo": "~54.0.10",
     "expo": "~54.0.0",
     "expo-asset": "~12.0.13",
