@@ -140,3 +140,40 @@ export async function scheduleWeekAlarms() {
     }
   }
 }
+
+/**
+ * Schedule a test alarm to fire 10 seconds from now.
+ */
+export async function scheduleTestAlarm() {
+  await ensureChannel();
+  const triggerTime = Date.now() + 10000; // 10 seconds from now
+
+  await notifee.createTriggerNotification(
+    {
+      title: "⏰ Kackoo Test Alarm",
+      body: "If you see this, your alarm configuration is working perfectly!",
+      android: {
+        channelId: "class-alarm",
+        category: AndroidCategory.ALARM,
+        importance: AndroidImportance.HIGH,
+        sound: "default",
+        vibrationPattern: [0, 500, 250, 500, 250, 500],
+        fullScreenAction: {
+          id: "default",
+        },
+        pressAction: {
+          id: "default",
+        },
+        autoCancel: true,
+      },
+    },
+    {
+      type: TriggerType.TIMESTAMP,
+      timestamp: triggerTime,
+      alarmManager: {
+        type: AlarmType.SET_EXACT_AND_ALLOW_WHILE_IDLE,
+      },
+    }
+  );
+}
+

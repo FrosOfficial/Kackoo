@@ -16,7 +16,7 @@ import {
 } from "react-native-gesture-handler";
 import { SCHEDULE, getDayName, DAY_NAMES } from "./data/scheduleData";
 import { getCurrentWeek } from "./utils/weekLogic";
-import { requestPermissions, scheduleWeekAlarms } from "./utils/notifications";
+import { requestPermissions, scheduleWeekAlarms, scheduleTestAlarm } from "./utils/notifications";
 import WeekBadge from "./components/WeekBadge";
 import DaySelector from "./components/DaySelector";
 import ClassCard from "./components/ClassCard";
@@ -38,6 +38,7 @@ export default function App() {
       const granted = await requestPermissions();
       if (granted) {
         await scheduleWeekAlarms();
+        await scheduleTestAlarm();
       }
     })();
 
