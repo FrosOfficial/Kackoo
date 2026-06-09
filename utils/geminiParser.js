@@ -1,5 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// Read the developer API key from an environment variable to prevent committing it to GitHub.
+// For local dev, put EXPO_PUBLIC_GEMINI_API_KEY=your_key in a .env file.
+// For production builds, add it as a secret/env variable in EAS.
+export const DEVELOPER_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "";
+
 /**
  * Parses a schedule image using Google's Gemini API.
  * 
@@ -9,14 +14,15 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
  * @returns {Promise<object>} The parsed schedule object.
  */
 export async function parseScheduleImage(base64Data, mimeType, apiKey) {
-  if (!apiKey) {
-    throw new Error("Gemini API key is required. Please set it in Settings.");
+  const activeKey = apiKey || DEVELOPER_API_KEY;
+  if (!activeKey) {
+    throw new Error("Gemini API key is required. Please set it in Settings or configure the developer key.");
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  // Using gemini-1.5-flash which is fast, lightweight and supports image input
+  const genAI = new GoogleGenerativeAI(activeKey);
+  // Using gemini-2.5-flash which is fast, lightweight, and supports image input
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.5-flash",
     generationConfig: { responseMimeType: "application/json" } // Force JSON output
   });
 

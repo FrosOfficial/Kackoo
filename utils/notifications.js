@@ -7,7 +7,7 @@ import notifee, {
 import { Platform } from "react-native";
 import { SCHEDULE } from "../data/scheduleData";
 import { getCurrentWeek } from "./weekLogic";
-import { loadSchedule } from "./storage";
+import { loadSchedule, loadTermSettings } from "./storage";
 
 /**
  * Create the alarm notification channel (Android only).
@@ -82,7 +82,8 @@ export async function scheduleWeekAlarms() {
   await notifee.cancelAllNotifications();
 
   const now = new Date();
-  const weekInfo = getCurrentWeek(now);
+  const { totalWeeks, learningMode } = await loadTermSettings();
+  const weekInfo = getCurrentWeek(now, totalWeeks, learningMode);
 
   if (!weekInfo) return;
 
