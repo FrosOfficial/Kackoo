@@ -29,20 +29,29 @@ async function ensureChannel() {
  * Request notification/alarm permissions.
  */
 export async function requestPermissions() {
-  // Request notification permission
-  const settings = await notifee.requestPermission();
+  console.log("Requesting permissions...");
+  try {
+    // Request notification permission
+    const settings = await notifee.requestPermission();
+    console.log("Notification permissions settings:", settings);
 
-  // On Android 12+, request exact alarm permission
-  if (Platform.OS === "android") {
-    const alarmPerm = await notifee.getNotificationSettings();
-    if (alarmPerm.android?.alarm !== 1) {
-      // Opens the system settings for exact alarm permission
-      await notifee.openAlarmPermissionSettings();
+    // On Android 12+, request exact alarm permission
+    if (Platform.OS === "android") {
+      const alarmPerm = await notifee.getNotificationSettings();
+      console.log("Android Alarm permission status:", alarmPerm.android?.alarm);
+      if (alarmPerm.android?.alarm !== 1) {
+        console.log("Opening system settings for exact alarms...");
+        await notifee.openAlarmPermissionSettings();
+      }
     }
-  }
 
-  await ensureChannel();
-  return true;
+    await ensureChannel();
+    console.log("Permissions successfully checked and channel ensured.");
+    return true;
+  } catch (err) {
+    console.error("Error checking permissions:", err);
+    return false;
+  }
 }
 
 /**
