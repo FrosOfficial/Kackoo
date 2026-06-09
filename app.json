@@ -27,7 +27,6 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@notifee/react-native",
       "expo-asset",
       "expo-font"
     ]
