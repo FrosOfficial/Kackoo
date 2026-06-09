@@ -82,7 +82,7 @@ export async function scheduleWeekAlarms() {
   await notifee.cancelAllNotifications();
 
   const now = new Date();
-  const { totalWeeks, learningMode } = await loadTermSettings();
+  const { totalWeeks, learningMode, onlineOffset, inpersonOffset } = await loadTermSettings();
   const weekInfo = getCurrentWeek(now, totalWeeks, learningMode);
 
   if (!weekInfo) return;
@@ -108,8 +108,8 @@ export async function scheduleWeekAlarms() {
       const time = parseTime(cls.start);
       if (!time) continue;
 
-      // 5 minutes before for online, 15 minutes before for in-person
-      const minutesLeft = isOnline ? 5 : 15;
+      // Custom offsets or standard fallbacks
+      const minutesLeft = isOnline ? (onlineOffset || 5) : (inpersonOffset || 15);
 
       // Build the trigger date
       const triggerDate = new Date(targetDate);
@@ -126,10 +126,19 @@ export async function scheduleWeekAlarms() {
         body = `${cls.code} starts at ${cls.start} - In-person class at ${cls.room} ${cls.building} this week(${weekInfo.weekNum})`;
       }
 
+      // Format offset string for high-premium title view
+      let offsetStr;
+      if (minutesLeft >= 60) {
+        const hrs = minutesLeft / 60;
+        offsetStr = `${hrs} hour${hrs > 1 ? "s" : ""}`;
+      } else {
+        offsetStr = `${minutesLeft} minute${minutesLeft > 1 ? "s" : ""}`;
+      }
+
       // Schedule the alarm using notifee
       await notifee.createTriggerNotification(
         {
-          title: `⏰ ${cls.code} in ${minutesLeft} minutes!`,
+          title: `⏰ ${cls.code} in ${offsetStr}!`,
           body,
           android: {
             channelId: "class-alarm-v4",

@@ -38,6 +38,8 @@ export default function App() {
   const [termType, setTermType] = useState("trimester");
   const [totalWeeks, setTotalWeeks] = useState(14);
   const [learningMode, setLearningMode] = useState("blended");
+  const [onlineOffset, setOnlineOffset] = useState(5);
+  const [inpersonOffset, setInpersonOffset] = useState(15);
   const [isConfiguringUpload, setIsConfiguringUpload] = useState(false);
   const [weekInfo, setWeekInfo] = useState(() => getCurrentWeek(now, 14, "blended"));
   const [isAlarmActive, setIsAlarmActive] = useState(false);
@@ -132,10 +134,12 @@ export default function App() {
       const storedKey = await loadApiKey();
       setApiKey(storedKey);
       
-      const { termType: storedType, totalWeeks: storedWeeks, learningMode: storedMode } = await loadTermSettings();
+      const { termType: storedType, totalWeeks: storedWeeks, learningMode: storedMode, onlineOffset: storedOnline, inpersonOffset: storedInPerson } = await loadTermSettings();
       setTermType(storedType);
       setTotalWeeks(storedWeeks);
       setLearningMode(storedMode);
+      setOnlineOffset(storedOnline);
+      setInpersonOffset(storedInPerson);
       setWeekInfo(getCurrentWeek(now, storedWeeks, storedMode));
     };
 
@@ -183,8 +187,10 @@ export default function App() {
     // Re-schedule alarms when app comes back to foreground
     const sub = AppState.addEventListener("change", async (state) => {
       if (state === "active") {
-        const { totalWeeks: latestWeeks, learningMode: latestMode } = await loadTermSettings();
+        const { totalWeeks: latestWeeks, learningMode: latestMode, onlineOffset: latestOnline, inpersonOffset: latestInPerson } = await loadTermSettings();
         setWeekInfo(getCurrentWeek(new Date(), latestWeeks, latestMode));
+        setOnlineOffset(latestOnline);
+        setInpersonOffset(latestInPerson);
         scheduleWeekAlarms();
         checkAlarmStatus();
       }
@@ -372,7 +378,7 @@ export default function App() {
                           setTermType(item.id);
                           setTotalWeeks(defaultWeeks);
                           setWeekInfo(getCurrentWeek(now, defaultWeeks, learningMode));
-                          await saveTermSettings(item.id, defaultWeeks, learningMode);
+                          await saveTermSettings(item.id, defaultWeeks, learningMode, onlineOffset, inpersonOffset);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -404,7 +410,7 @@ export default function App() {
                         onPress={async () => {
                           setTotalWeeks(weeksNum);
                           setWeekInfo(getCurrentWeek(now, weeksNum, learningMode));
-                          await saveTermSettings(termType, weeksNum, learningMode);
+                          await saveTermSettings(termType, weeksNum, learningMode, onlineOffset, inpersonOffset);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -435,7 +441,7 @@ export default function App() {
                         onPress={async () => {
                           setLearningMode(item.id);
                           setWeekInfo(getCurrentWeek(now, totalWeeks, item.id));
-                          await saveTermSettings(termType, totalWeeks, item.id);
+                          await saveTermSettings(termType, totalWeeks, item.id, onlineOffset, inpersonOffset);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -449,6 +455,76 @@ export default function App() {
                     );
                   })}
                 </View>
+
+                {/* Online Alarm Offset */}
+                {(learningMode === "blended" || learningMode === "online") && (
+                  <>
+                    <Text className="text-gray-400 text-sm font-semibold mb-2">Online Alarm Offset</Text>
+                    <View className="flex-row gap-2 mb-4">
+                      {[
+                        { val: 1, label: "1 Min" },
+                        { val: 5, label: "5 Min" },
+                        { val: 10, label: "10 Min" },
+                        { val: 15, label: "15 Min" },
+                      ].map((item) => {
+                        const isActive = onlineOffset === item.val;
+                        return (
+                          <TouchableOpacity
+                            key={item.val}
+                            activeOpacity={0.8}
+                            onPress={async () => {
+                              setOnlineOffset(item.val);
+                              await saveTermSettings(termType, totalWeeks, learningMode, item.val, inpersonOffset);
+                              await scheduleWeekAlarms();
+                            }}
+                            className={`flex-1 py-3 rounded-2xl items-center border ${
+                              isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
+                            }`}
+                          >
+                            <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </>
+                )}
+
+                {/* Face to Face Alarm Offset */}
+                {(learningMode === "blended" || learningMode === "inperson") && (
+                  <>
+                    <Text className="text-gray-400 text-sm font-semibold mb-2">Face to Face Alarm Offset</Text>
+                    <View className="flex-row gap-2 mb-6">
+                      {[
+                        { val: 15, label: "15 Min" },
+                        { val: 30, label: "30 Min" },
+                        { val: 60, label: "1 Hr" },
+                        { val: 120, label: "2 Hr" },
+                      ].map((item) => {
+                        const isActive = inpersonOffset === item.val;
+                        return (
+                          <TouchableOpacity
+                            key={item.val}
+                            activeOpacity={0.8}
+                            onPress={async () => {
+                              setInpersonOffset(item.val);
+                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, item.val);
+                              await scheduleWeekAlarms();
+                            }}
+                            className={`flex-1 py-3 rounded-2xl items-center border ${
+                              isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
+                            }`}
+                          >
+                            <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </>
+                )}
 
                 {isParsing ? (
                   <View className="py-6 items-center">

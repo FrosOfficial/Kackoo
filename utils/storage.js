@@ -66,6 +66,8 @@ export async function saveApiKey(key) {
 const TERM_TYPE_KEY = 'KACKOO_TERM_TYPE';
 const TOTAL_WEEKS_KEY = 'KACKOO_TOTAL_WEEKS';
 const LEARNING_MODE_KEY = 'KACKOO_LEARNING_MODE';
+const ONLINE_OFFSET_KEY = 'KACKOO_ONLINE_OFFSET';
+const INPERSON_OFFSET_KEY = 'KACKOO_INPERSON_OFFSET';
 
 /**
  * Load academic term settings.
@@ -76,21 +78,31 @@ export async function loadTermSettings() {
     const totalWeeksStr = await AsyncStorage.getItem(TOTAL_WEEKS_KEY);
     const totalWeeks = totalWeeksStr ? parseInt(totalWeeksStr, 10) : 14;
     const learningMode = await AsyncStorage.getItem(LEARNING_MODE_KEY) || 'blended';
-    return { termType, totalWeeks, learningMode };
+    const onlineOffsetStr = await AsyncStorage.getItem(ONLINE_OFFSET_KEY);
+    const onlineOffset = onlineOffsetStr ? parseInt(onlineOffsetStr, 10) : 5;
+    const inpersonOffsetStr = await AsyncStorage.getItem(INPERSON_OFFSET_KEY);
+    const inpersonOffset = inpersonOffsetStr ? parseInt(inpersonOffsetStr, 10) : 15;
+    return { termType, totalWeeks, learningMode, onlineOffset, inpersonOffset };
   } catch (e) {
     console.error("Failed to load term settings:", e);
-    return { termType: 'trimester', totalWeeks: 14, learningMode: 'blended' };
+    return { termType: 'trimester', totalWeeks: 14, learningMode: 'blended', onlineOffset: 5, inpersonOffset: 15 };
   }
 }
 
 /**
  * Save academic term settings.
  */
-export async function saveTermSettings(termType, totalWeeks, learningMode) {
+export async function saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset) {
   try {
     await AsyncStorage.setItem(TERM_TYPE_KEY, termType);
     await AsyncStorage.setItem(TOTAL_WEEKS_KEY, totalWeeks.toString());
     await AsyncStorage.setItem(LEARNING_MODE_KEY, learningMode);
+    if (onlineOffset !== undefined && onlineOffset !== null) {
+      await AsyncStorage.setItem(ONLINE_OFFSET_KEY, onlineOffset.toString());
+    }
+    if (inpersonOffset !== undefined && inpersonOffset !== null) {
+      await AsyncStorage.setItem(INPERSON_OFFSET_KEY, inpersonOffset.toString());
+    }
   } catch (e) {
     console.error("Failed to save term settings:", e);
   }
