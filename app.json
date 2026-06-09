@@ -29,6 +29,12 @@
     "plugins": [
       "expo-asset",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ca3ea4b5-94c7-427b-9c8f-c7fcf38262b7"
+      }
+    },
+    "owner": "fros"
   }
 }
