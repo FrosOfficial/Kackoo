@@ -117,3 +117,28 @@ export async function saveTermSettings(termType, totalWeeks, learningMode, onlin
     console.error("Failed to save term settings:", e);
   }
 }
+
+const INITIALIZED_KEY = 'KACKOO_INITIALIZED';
+
+/**
+ * Check if the app has been initialized before.
+ */
+export async function isAppInitialized() {
+  try {
+    const val = await AsyncStorage.getItem(INITIALIZED_KEY);
+    return val === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Save the app initialized status.
+ */
+export async function setAppInitialized(val) {
+  try {
+    await AsyncStorage.setItem(INITIALIZED_KEY, val ? 'true' : 'false');
+  } catch (e) {
+    console.error("Failed to set app initialized flag:", e);
+  }
+}
