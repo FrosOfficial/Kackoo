@@ -40,8 +40,9 @@ export default function App() {
   const [learningMode, setLearningMode] = useState("blended");
   const [onlineOffset, setOnlineOffset] = useState(5);
   const [inpersonOffset, setInpersonOffset] = useState(15);
+  const [onlineWeekPattern, setOnlineWeekPattern] = useState("even");
   const [isConfiguringUpload, setIsConfiguringUpload] = useState(false);
-  const [weekInfo, setWeekInfo] = useState(() => getCurrentWeek(now, 14, "blended"));
+  const [weekInfo, setWeekInfo] = useState(() => getCurrentWeek(now, 14, "blended", "even"));
   const [isAlarmActive, setIsAlarmActive] = useState(false);
   const [schedule, setSchedule] = useState(SCHEDULE);
   const [apiKey, setApiKey] = useState("");
@@ -134,13 +135,14 @@ export default function App() {
       const storedKey = await loadApiKey();
       setApiKey(storedKey);
       
-      const { termType: storedType, totalWeeks: storedWeeks, learningMode: storedMode, onlineOffset: storedOnline, inpersonOffset: storedInPerson } = await loadTermSettings();
+      const { termType: storedType, totalWeeks: storedWeeks, learningMode: storedMode, onlineOffset: storedOnline, inpersonOffset: storedInPerson, onlineWeekPattern: storedPattern } = await loadTermSettings();
       setTermType(storedType);
       setTotalWeeks(storedWeeks);
       setLearningMode(storedMode);
       setOnlineOffset(storedOnline);
       setInpersonOffset(storedInPerson);
-      setWeekInfo(getCurrentWeek(now, storedWeeks, storedMode));
+      setOnlineWeekPattern(storedPattern);
+      setWeekInfo(getCurrentWeek(now, storedWeeks, storedMode, storedPattern));
     };
 
     const checkAlarmStatus = async () => {
@@ -187,10 +189,11 @@ export default function App() {
     // Re-schedule alarms when app comes back to foreground
     const sub = AppState.addEventListener("change", async (state) => {
       if (state === "active") {
-        const { totalWeeks: latestWeeks, learningMode: latestMode, onlineOffset: latestOnline, inpersonOffset: latestInPerson } = await loadTermSettings();
-        setWeekInfo(getCurrentWeek(new Date(), latestWeeks, latestMode));
+        const { totalWeeks: latestWeeks, learningMode: latestMode, onlineOffset: latestOnline, inpersonOffset: latestInPerson, onlineWeekPattern: latestPattern } = await loadTermSettings();
+        setWeekInfo(getCurrentWeek(new Date(), latestWeeks, latestMode, latestPattern));
         setOnlineOffset(latestOnline);
         setInpersonOffset(latestInPerson);
+        setOnlineWeekPattern(latestPattern);
         scheduleWeekAlarms();
         checkAlarmStatus();
       }
@@ -377,8 +380,8 @@ export default function App() {
                             item.id === "semester" ? 16 : item.id === "trimester" ? 14 : 10;
                           setTermType(item.id);
                           setTotalWeeks(defaultWeeks);
-                          setWeekInfo(getCurrentWeek(now, defaultWeeks, learningMode));
-                          await saveTermSettings(item.id, defaultWeeks, learningMode, onlineOffset, inpersonOffset);
+                          setWeekInfo(getCurrentWeek(now, defaultWeeks, learningMode, onlineWeekPattern));
+                          await saveTermSettings(item.id, defaultWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -409,8 +412,8 @@ export default function App() {
                         activeOpacity={0.8}
                         onPress={async () => {
                           setTotalWeeks(weeksNum);
-                          setWeekInfo(getCurrentWeek(now, weeksNum, learningMode));
-                          await saveTermSettings(termType, weeksNum, learningMode, onlineOffset, inpersonOffset);
+                          setWeekInfo(getCurrentWeek(now, weeksNum, learningMode, onlineWeekPattern));
+                          await saveTermSettings(termType, weeksNum, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -418,7 +421,7 @@ export default function App() {
                         }`}
                       >
                         <Text className={`font-bold text-sm ${isActive ? "text-surface-900" : "text-gray-300"}`}>
-                          {weeksNum} Wk
+                          {weeksNum} Week
                         </Text>
                       </TouchableOpacity>
                     );
@@ -427,7 +430,7 @@ export default function App() {
 
                 {/* Learning Mode Selector */}
                 <Text className="text-gray-400 text-sm font-semibold mb-2">Learning Mode</Text>
-                <View className="flex-row gap-2 mb-6">
+                <View className="flex-row gap-2 mb-4">
                   {[
                     { id: "blended", label: "Blended" },
                     { id: "online", label: "Full Online" },
@@ -440,8 +443,8 @@ export default function App() {
                         activeOpacity={0.8}
                         onPress={async () => {
                           setLearningMode(item.id);
-                          setWeekInfo(getCurrentWeek(now, totalWeeks, item.id));
-                          await saveTermSettings(termType, totalWeeks, item.id, onlineOffset, inpersonOffset);
+                          setWeekInfo(getCurrentWeek(now, totalWeeks, item.id, onlineWeekPattern));
+                          await saveTermSettings(termType, totalWeeks, item.id, onlineOffset, inpersonOffset, onlineWeekPattern);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -455,6 +458,40 @@ export default function App() {
                     );
                   })}
                 </View>
+
+                {/* Online Weeks Pattern */}
+                {learningMode === "blended" && (
+                  <>
+                    <Text className="text-gray-400 text-sm font-semibold mb-2">Online Weeks Pattern</Text>
+                    <View className="flex-row gap-2 mb-4">
+                      {[
+                        { id: "even", label: "Even Weeks" },
+                        { id: "odd", label: "Odd Weeks" },
+                      ].map((item) => {
+                        const isActive = onlineWeekPattern === item.id;
+                        return (
+                          <TouchableOpacity
+                            key={item.id}
+                            activeOpacity={0.8}
+                            onPress={async () => {
+                              setOnlineWeekPattern(item.id);
+                              setWeekInfo(getCurrentWeek(now, totalWeeks, learningMode, item.id));
+                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, item.id);
+                              await scheduleWeekAlarms();
+                            }}
+                            className={`flex-1 py-3 rounded-2xl items-center border ${
+                              isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
+                            }`}
+                          >
+                            <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </>
+                )}
 
                 {/* Online Alarm Offset */}
                 {(learningMode === "blended" || learningMode === "online") && (
@@ -474,7 +511,7 @@ export default function App() {
                             activeOpacity={0.8}
                             onPress={async () => {
                               setOnlineOffset(item.val);
-                              await saveTermSettings(termType, totalWeeks, learningMode, item.val, inpersonOffset);
+                              await saveTermSettings(termType, totalWeeks, learningMode, item.val, inpersonOffset, onlineWeekPattern);
                               await scheduleWeekAlarms();
                             }}
                             className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -509,7 +546,7 @@ export default function App() {
                             activeOpacity={0.8}
                             onPress={async () => {
                               setInpersonOffset(item.val);
-                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, item.val);
+                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, item.val, onlineWeekPattern);
                               await scheduleWeekAlarms();
                             }}
                             className={`flex-1 py-3 rounded-2xl items-center border ${

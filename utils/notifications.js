@@ -82,8 +82,8 @@ export async function scheduleWeekAlarms() {
   await notifee.cancelAllNotifications();
 
   const now = new Date();
-  const { totalWeeks, learningMode, onlineOffset, inpersonOffset } = await loadTermSettings();
-  const weekInfo = getCurrentWeek(now, totalWeeks, learningMode);
+  const { totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern } = await loadTermSettings();
+  const weekInfo = getCurrentWeek(now, totalWeeks, learningMode, onlineWeekPattern);
 
   if (!weekInfo) return;
 

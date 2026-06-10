@@ -68,6 +68,7 @@ const TOTAL_WEEKS_KEY = 'KACKOO_TOTAL_WEEKS';
 const LEARNING_MODE_KEY = 'KACKOO_LEARNING_MODE';
 const ONLINE_OFFSET_KEY = 'KACKOO_ONLINE_OFFSET';
 const INPERSON_OFFSET_KEY = 'KACKOO_INPERSON_OFFSET';
+const ONLINE_WEEK_PATTERN_KEY = 'KACKOO_ONLINE_WEEK_PATTERN';
 
 /**
  * Load academic term settings.
@@ -82,17 +83,18 @@ export async function loadTermSettings() {
     const onlineOffset = onlineOffsetStr ? parseInt(onlineOffsetStr, 10) : 5;
     const inpersonOffsetStr = await AsyncStorage.getItem(INPERSON_OFFSET_KEY);
     const inpersonOffset = inpersonOffsetStr ? parseInt(inpersonOffsetStr, 10) : 15;
-    return { termType, totalWeeks, learningMode, onlineOffset, inpersonOffset };
+    const onlineWeekPattern = await AsyncStorage.getItem(ONLINE_WEEK_PATTERN_KEY) || 'even';
+    return { termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern };
   } catch (e) {
     console.error("Failed to load term settings:", e);
-    return { termType: 'trimester', totalWeeks: 14, learningMode: 'blended', onlineOffset: 5, inpersonOffset: 15 };
+    return { termType: 'trimester', totalWeeks: 14, learningMode: 'blended', onlineOffset: 5, inpersonOffset: 15, onlineWeekPattern: 'even' };
   }
 }
 
 /**
  * Save academic term settings.
  */
-export async function saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset) {
+export async function saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern) {
   try {
     await AsyncStorage.setItem(TERM_TYPE_KEY, termType);
     await AsyncStorage.setItem(TOTAL_WEEKS_KEY, totalWeeks.toString());
@@ -102,6 +104,9 @@ export async function saveTermSettings(termType, totalWeeks, learningMode, onlin
     }
     if (inpersonOffset !== undefined && inpersonOffset !== null) {
       await AsyncStorage.setItem(INPERSON_OFFSET_KEY, inpersonOffset.toString());
+    }
+    if (onlineWeekPattern !== undefined && onlineWeekPattern !== null) {
+      await AsyncStorage.setItem(ONLINE_WEEK_PATTERN_KEY, onlineWeekPattern);
     }
   } catch (e) {
     console.error("Failed to save term settings:", e);
