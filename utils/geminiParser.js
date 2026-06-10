@@ -1,30 +1,20 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-// Read the developer API key from an environment variable to prevent committing it to GitHub.
-// For local dev, put EXPO_PUBLIC_GEMINI_API_KEY=your_key in a .env file.
-// For production builds, add it as a secret/env variable in EAS.
-export const DEVELOPER_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "";
+// Read the developer OpenAI API key from an environment variable.
+// For local dev, put EXPO_PUBLIC_OPENAI_API_KEY=your_key in a .env file.
+export const DEVELOPER_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || "";
 
 /**
- * Parses a schedule image using Google's Gemini API.
+ * Parses a schedule image using OpenAI's GPT-4o-mini API.
  * 
  * @param {string} base64Data The base64-encoded image data.
  * @param {string} mimeType The mime type of the image (e.g. 'image/jpeg').
- * @param {string} apiKey The user's Gemini API Key.
+ * @param {string} apiKey The user's OpenAI API Key (optional).
  * @returns {Promise<object>} The parsed schedule object.
  */
 export async function parseScheduleImage(base64Data, mimeType, apiKey) {
   const activeKey = apiKey || DEVELOPER_API_KEY;
   if (!activeKey) {
-    throw new Error("Gemini API key is required. Please set it in Settings or configure the developer key.");
+    throw new Error("OpenAI API key is required. Please set EXPO_PUBLIC_OPENAI_API_KEY in your .env file.");
   }
-
-  const genAI = new GoogleGenerativeAI(activeKey);
-  // Using gemini-1.5-flash to avoid reasoning/thinking token usage spikes
-  const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
-    generationConfig: { responseMimeType: "application/json" } // Force JSON output
-  });
 
   const prompt = `
     Analyze this class schedule image and extract all classes into structured JSON.
@@ -48,21 +38,49 @@ export async function parseScheduleImage(base64Data, mimeType, apiKey) {
     3. Ensure times are formatted exactly with AM/PM e.g., "8:00AM", "1:30PM".
     4. Set unique ids for each class (e.g., "mon-1", "mon-2", "tue-1", etc.).
     5. If room or building is not listed or unclear, set them to "TBA".
-    6. Return ONLY the JSON object. Do not include markdown code block syntax.
+    6. Return ONLY the JSON object.
   `;
 
-  const response = await model.generateContent([
-    prompt,
-    {
-      inlineData: {
-        data: base64Data,
-        mimeType: mimeType || "image/jpeg"
-      }
-    }
-  ]);
+  // Format mime type and base64 for image URL
+  const dataUrl = `data:${mimeType || "image/jpeg"};base64,${base64Data}`;
 
-  const text = response.response.text();
-  console.log("Raw response from Gemini:", text);
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${activeKey}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: prompt
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: dataUrl
+              }
+            }
+          ]
+        }
+      ],
+      response_format: { type: "json_object" }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  const text = result.choices[0].message.content;
+  console.log("Raw response from OpenAI:", text);
   
   // Parse and validate the response
   const parsed = JSON.parse(text.trim());
