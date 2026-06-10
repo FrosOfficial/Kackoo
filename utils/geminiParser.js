@@ -20,9 +20,9 @@ export async function parseScheduleImage(base64Data, mimeType, apiKey) {
   }
 
   const genAI = new GoogleGenerativeAI(activeKey);
-  // Using gemini-2.5-flash which is fast, lightweight, and supports image input
+  // Using gemini-1.5-flash to avoid reasoning/thinking token usage spikes
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-1.5-flash",
     generationConfig: { responseMimeType: "application/json" } // Force JSON output
   });
 
