@@ -8,21 +8,27 @@ const withRawResource = (config) => {
     async (config) => {
       const projectRoot = config.modRequest.projectRoot;
       
-      const sourceFile = path.join(projectRoot, "assets/alarm.wav");
+      const assetsDir = path.join(projectRoot, "assets");
       const rawDir = path.join(projectRoot, "android/app/src/main/res/raw");
-      const destFile = path.join(rawDir, "alarm.wav");
 
       // Ensure directory exists
       if (!fs.existsSync(rawDir)) {
         fs.mkdirSync(rawDir, { recursive: true });
       }
 
-      // Copy file if source exists
-      if (fs.existsSync(sourceFile)) {
-        fs.copyFileSync(sourceFile, destFile);
-        console.log("Copied alarm.wav to Android resources folder successfully.");
+      // Copy all .wav files in assets/
+      if (fs.existsSync(assetsDir)) {
+        const files = fs.readdirSync(assetsDir);
+        for (const file of files) {
+          if (file.endsWith(".wav")) {
+            const src = path.join(assetsDir, file);
+            const dest = path.join(rawDir, file);
+            fs.copyFileSync(src, dest);
+            console.log(`Copied ${file} to Android resources folder successfully.`);
+          }
+        }
       } else {
-        console.warn("Source alarm.wav not found at path:", sourceFile);
+        console.warn("Assets directory not found at path:", assetsDir);
       }
 
       return config;

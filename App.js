@@ -41,6 +41,7 @@ export default function App() {
   const [onlineOffset, setOnlineOffset] = useState(5);
   const [inpersonOffset, setInpersonOffset] = useState(15);
   const [onlineWeekPattern, setOnlineWeekPattern] = useState("even");
+  const [alarmSound, setAlarmSound] = useState("alarm");
   const [isConfiguringUpload, setIsConfiguringUpload] = useState(false);
   const [weekInfo, setWeekInfo] = useState(() => getCurrentWeek(now, 14, "blended", "even"));
   const [isAlarmActive, setIsAlarmActive] = useState(false);
@@ -135,13 +136,14 @@ export default function App() {
       const storedKey = await loadApiKey();
       setApiKey(storedKey);
       
-      const { termType: storedType, totalWeeks: storedWeeks, learningMode: storedMode, onlineOffset: storedOnline, inpersonOffset: storedInPerson, onlineWeekPattern: storedPattern } = await loadTermSettings();
+      const { termType: storedType, totalWeeks: storedWeeks, learningMode: storedMode, onlineOffset: storedOnline, inpersonOffset: storedInPerson, onlineWeekPattern: storedPattern, alarmSound: storedSound } = await loadTermSettings();
       setTermType(storedType);
       setTotalWeeks(storedWeeks);
       setLearningMode(storedMode);
       setOnlineOffset(storedOnline);
       setInpersonOffset(storedInPerson);
       setOnlineWeekPattern(storedPattern);
+      setAlarmSound(storedSound);
       setWeekInfo(getCurrentWeek(now, storedWeeks, storedMode, storedPattern));
     };
 
@@ -172,7 +174,10 @@ export default function App() {
 
       if (type === EventType.DELIVERED) {
         console.log("Alarm triggered in foreground! Playing audio...");
-        AlarmModule.playAlarm();
+        const { totalWeeks, learningMode, onlineWeekPattern, alarmSound } = await loadTermSettings();
+        const currentWeekInfo = getCurrentWeek(new Date(), totalWeeks, learningMode, onlineWeekPattern);
+        const isOnlineWeek = currentWeekInfo?.mode === "Online";
+        AlarmModule.playAlarm(alarmSound || "alarm", isOnlineWeek);
         setIsAlarmActive(true);
       } else if (
         (type === EventType.ACTION_PRESS && pressAction?.id === "dismiss-alarm") ||
@@ -189,11 +194,12 @@ export default function App() {
     // Re-schedule alarms when app comes back to foreground
     const sub = AppState.addEventListener("change", async (state) => {
       if (state === "active") {
-        const { totalWeeks: latestWeeks, learningMode: latestMode, onlineOffset: latestOnline, inpersonOffset: latestInPerson, onlineWeekPattern: latestPattern } = await loadTermSettings();
+        const { totalWeeks: latestWeeks, learningMode: latestMode, onlineOffset: latestOnline, inpersonOffset: latestInPerson, onlineWeekPattern: latestPattern, alarmSound: latestSound } = await loadTermSettings();
         setWeekInfo(getCurrentWeek(new Date(), latestWeeks, latestMode, latestPattern));
         setOnlineOffset(latestOnline);
         setInpersonOffset(latestInPerson);
         setOnlineWeekPattern(latestPattern);
+        setAlarmSound(latestSound);
         scheduleWeekAlarms();
         checkAlarmStatus();
       }
@@ -381,7 +387,7 @@ export default function App() {
                           setTermType(item.id);
                           setTotalWeeks(defaultWeeks);
                           setWeekInfo(getCurrentWeek(now, defaultWeeks, learningMode, onlineWeekPattern));
-                          await saveTermSettings(item.id, defaultWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern);
+                          await saveTermSettings(item.id, defaultWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -413,7 +419,7 @@ export default function App() {
                         onPress={async () => {
                           setTotalWeeks(weeksNum);
                           setWeekInfo(getCurrentWeek(now, weeksNum, learningMode, onlineWeekPattern));
-                          await saveTermSettings(termType, weeksNum, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern);
+                          await saveTermSettings(termType, weeksNum, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -444,7 +450,7 @@ export default function App() {
                         onPress={async () => {
                           setLearningMode(item.id);
                           setWeekInfo(getCurrentWeek(now, totalWeeks, item.id, onlineWeekPattern));
-                          await saveTermSettings(termType, totalWeeks, item.id, onlineOffset, inpersonOffset, onlineWeekPattern);
+                          await saveTermSettings(termType, totalWeeks, item.id, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
                           await scheduleWeekAlarms();
                         }}
                         className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -476,7 +482,7 @@ export default function App() {
                             onPress={async () => {
                               setOnlineWeekPattern(item.id);
                               setWeekInfo(getCurrentWeek(now, totalWeeks, learningMode, item.id));
-                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, item.id);
+                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, item.id, alarmSound);
                               await scheduleWeekAlarms();
                             }}
                             className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -511,7 +517,7 @@ export default function App() {
                             activeOpacity={0.8}
                             onPress={async () => {
                               setOnlineOffset(item.val);
-                              await saveTermSettings(termType, totalWeeks, learningMode, item.val, inpersonOffset, onlineWeekPattern);
+                              await saveTermSettings(termType, totalWeeks, learningMode, item.val, inpersonOffset, onlineWeekPattern, alarmSound);
                               await scheduleWeekAlarms();
                             }}
                             className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -532,7 +538,7 @@ export default function App() {
                 {(learningMode === "blended" || learningMode === "inperson") && (
                   <>
                     <Text className="text-gray-400 text-sm font-semibold mb-2">Face to Face Alarm Offset</Text>
-                    <View className="flex-row gap-2 mb-6">
+                    <View className="flex-row gap-2 mb-4">
                       {[
                         { val: 15, label: "15 Min" },
                         { val: 30, label: "30 Min" },
@@ -546,7 +552,7 @@ export default function App() {
                             activeOpacity={0.8}
                             onPress={async () => {
                               setInpersonOffset(item.val);
-                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, item.val, onlineWeekPattern);
+                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, item.val, onlineWeekPattern, alarmSound);
                               await scheduleWeekAlarms();
                             }}
                             className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -562,6 +568,48 @@ export default function App() {
                     </View>
                   </>
                 )}
+
+                {/* Alarm Sound Selector */}
+                <Text className="text-gray-400 text-sm font-semibold mb-2">Alarm Sound</Text>
+                <View className="flex-row gap-2 mb-6">
+                  {[
+                    { id: "alarm", label: "Default Beep" },
+                    { id: "chime", label: "Gentle Chime" },
+                    { id: "beep", label: "Double Beep" },
+                  ].map((item) => {
+                    const isActive = alarmSound === item.id;
+                    return (
+                      <TouchableOpacity
+                        key={item.id}
+                        activeOpacity={0.8}
+                        onPress={async () => {
+                          setAlarmSound(item.id);
+                          await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, item.id);
+                          await scheduleWeekAlarms();
+
+                          // Play a brief sample preview of the selected sound
+                          try {
+                            AlarmModule.stopAlarm();
+                            // Play without looping so it stops naturally or gets cut off
+                            AlarmModule.playAlarm(item.id, false);
+                            setTimeout(() => {
+                              AlarmModule.stopAlarm();
+                            }, 2000); // stop preview after 2 seconds
+                          } catch (err) {
+                            console.error("Failed to play sound preview:", err);
+                          }
+                        }}
+                        className={`flex-1 py-3 rounded-2xl items-center border ${
+                          isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
+                        }`}
+                      >
+                        <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
 
                 {isParsing ? (
                   <View className="py-6 items-center">

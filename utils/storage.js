@@ -69,6 +69,7 @@ const LEARNING_MODE_KEY = 'KACKOO_LEARNING_MODE';
 const ONLINE_OFFSET_KEY = 'KACKOO_ONLINE_OFFSET';
 const INPERSON_OFFSET_KEY = 'KACKOO_INPERSON_OFFSET';
 const ONLINE_WEEK_PATTERN_KEY = 'KACKOO_ONLINE_WEEK_PATTERN';
+const ALARM_SOUND_KEY = 'KACKOO_ALARM_SOUND';
 
 /**
  * Load academic term settings.
@@ -84,17 +85,18 @@ export async function loadTermSettings() {
     const inpersonOffsetStr = await AsyncStorage.getItem(INPERSON_OFFSET_KEY);
     const inpersonOffset = inpersonOffsetStr ? parseInt(inpersonOffsetStr, 10) : 15;
     const onlineWeekPattern = await AsyncStorage.getItem(ONLINE_WEEK_PATTERN_KEY) || 'even';
-    return { termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern };
+    const alarmSound = await AsyncStorage.getItem(ALARM_SOUND_KEY) || 'alarm';
+    return { termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound };
   } catch (e) {
     console.error("Failed to load term settings:", e);
-    return { termType: 'trimester', totalWeeks: 14, learningMode: 'blended', onlineOffset: 5, inpersonOffset: 15, onlineWeekPattern: 'even' };
+    return { termType: 'trimester', totalWeeks: 14, learningMode: 'blended', onlineOffset: 5, inpersonOffset: 15, onlineWeekPattern: 'even', alarmSound: 'alarm' };
   }
 }
 
 /**
  * Save academic term settings.
  */
-export async function saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern) {
+export async function saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound) {
   try {
     await AsyncStorage.setItem(TERM_TYPE_KEY, termType);
     await AsyncStorage.setItem(TOTAL_WEEKS_KEY, totalWeeks.toString());
@@ -107,6 +109,9 @@ export async function saveTermSettings(termType, totalWeeks, learningMode, onlin
     }
     if (onlineWeekPattern !== undefined && onlineWeekPattern !== null) {
       await AsyncStorage.setItem(ONLINE_WEEK_PATTERN_KEY, onlineWeekPattern);
+    }
+    if (alarmSound !== undefined && alarmSound !== null) {
+      await AsyncStorage.setItem(ALARM_SOUND_KEY, alarmSound);
     }
   } catch (e) {
     console.error("Failed to save term settings:", e);

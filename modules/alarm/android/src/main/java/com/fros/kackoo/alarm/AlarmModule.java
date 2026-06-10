@@ -23,25 +23,34 @@ public class AlarmModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void playAlarm() {
+    public void playAlarm(String soundName, boolean looping) {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             return;
         }
         try {
-            Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alert == null) {
-                alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            Uri alertUri = null;
+            if (soundName != null && !soundName.isEmpty()) {
+                int resId = reactContext.getResources().getIdentifier(soundName, "raw", reactContext.getPackageName());
+                if (resId != 0) {
+                    alertUri = Uri.parse("android.resource://" + reactContext.getPackageName() + "/" + resId);
+                }
+            }
+            if (alertUri == null) {
+                alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            }
+            if (alertUri == null) {
+                alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
             }
             
             mediaPlayer = new MediaPlayer();
-            mediaPlayer.setDataSource(reactContext, alert);
+            mediaPlayer.setDataSource(reactContext, alertUri);
             
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build();
             mediaPlayer.setAudioAttributes(audioAttributes);
-            mediaPlayer.setLooping(true);
+            mediaPlayer.setLooping(looping);
             mediaPlayer.prepare();
             mediaPlayer.start();
         } catch (Exception e) {

@@ -13,15 +13,15 @@ import { loadSchedule, loadTermSettings } from "./storage";
  * Create the alarm notification channel (Android only).
  * Uses ALARM category for full-screen, high-priority alerts.
  */
-async function ensureChannel() {
+async function ensureChannel(soundName = "alarm") {
   if (Platform.OS === "android") {
     await notifee.createChannel({
-      id: "class-alarm-v4",
-      name: "Class Alarms",
+      id: `class-alarm-${soundName}`,
+      name: `Class Alarms (${soundName})`,
       importance: AndroidImportance.HIGH,
       vibration: true,
       vibrationPattern: [500, 250, 500, 250],
-      sound: "alarm",
+      sound: soundName,
       bypassDnd: true,
     });
   }
@@ -82,14 +82,15 @@ export async function scheduleWeekAlarms() {
   await notifee.cancelAllNotifications();
 
   const now = new Date();
-  const { totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern } = await loadTermSettings();
+  const { totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound } = await loadTermSettings();
   const weekInfo = getCurrentWeek(now, totalWeeks, learningMode, onlineWeekPattern);
 
   if (!weekInfo) return;
 
   const isOnline = weekInfo.mode === "Online";
+  const activeSound = alarmSound || "alarm";
 
-  await ensureChannel();
+  await ensureChannel(activeSound);
 
   const scheduleData = await loadSchedule();
 
@@ -104,9 +105,26 @@ export async function scheduleWeekAlarms() {
 
     const classes = scheduleData[scheduleDayName] || [];
 
-    for (const cls of classes) {
-      const time = parseTime(cls.start);
-      if (!time) continue;
+    // Parse classes and sort them by start time
+    const classesWithTime = classes
+      .map((cls) => {
+        const time = parseTime(cls.start);
+        return {
+          cls,
+          time,
+          mins: time ? time.hours * 60 + time.minutes : 9999,
+        };
+      })
+      .filter((x) => x.time !== null)
+      .sort((a, b) => a.mins - b.mins);
+
+    // If it's an In-person week, only schedule the FIRST class of the day.
+    const activeClasses = (!isOnline && classesWithTime.length > 0)
+      ? [classesWithTime[0]]
+      : classesWithTime;
+
+    for (const item of activeClasses) {
+      const { cls, time } = item;
 
       // Custom offsets or standard fallbacks
       const minutesLeft = isOnline ? (onlineOffset || 5) : (inpersonOffset || 15);
@@ -141,13 +159,13 @@ export async function scheduleWeekAlarms() {
           title: `⏰ ${cls.code} in ${offsetStr}!`,
           body,
           android: {
-            channelId: "class-alarm-v4",
+            channelId: `class-alarm-${activeSound}`,
             category: AndroidCategory.ALARM,
             importance: AndroidImportance.HIGH,
-            sound: "alarm",
+            sound: activeSound,
             vibrationPattern: [500, 250, 500, 250],
-            loopSound: true,
-            ongoing: true,
+            loopSound: isOnline,
+            ongoing: isOnline,
             autoCancel: false,
             fullScreenAction: {
               id: "default",
