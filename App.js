@@ -63,10 +63,10 @@ export default function App() {
     }
   };
 
-  // Pick an image of the schedule and parse it using OpenAI
+  // Pick an image of the schedule and parse it using OpenRouter
   const handlePickImage = async () => {
     if (!apiKey && !DEVELOPER_API_KEY) {
-      alert("OpenAI API key is not configured.");
+      alert("OpenRouter API key is not configured.");
       return;
     }
 
@@ -605,7 +605,7 @@ export default function App() {
                   <View className="py-6 items-center">
                     <ActivityIndicator size="large" color="#06b6d4" />
                     <Text className="text-cyan-400 text-sm font-medium mt-4">
-                      OpenAI is reading your schedule...
+                      AI is reading your schedule...
                     </Text>
                   </View>
                 ) : (
