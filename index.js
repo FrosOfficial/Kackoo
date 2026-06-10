@@ -1,6 +1,8 @@
 import { registerRootComponent } from 'expo';
 import notifee, { EventType } from '@notifee/react-native';
 import AlarmModule from 'alarm-module';
+import { loadTermSettings } from './utils/storage';
+import { getCurrentWeek } from './utils/weekLogic';
 
 import App from './App';
 
@@ -11,7 +13,16 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
 
   if (type === EventType.DELIVERED) {
     console.log("Alarm triggered! Playing alarm stream audio...");
-    AlarmModule.playAlarm();
+    try {
+      const { totalWeeks, learningMode, onlineWeekPattern, alarmSound } = await loadTermSettings();
+      const currentWeekInfo = getCurrentWeek(new Date(), totalWeeks, learningMode, onlineWeekPattern);
+      const isOnlineWeek = currentWeekInfo?.mode === "Online";
+      AlarmModule.playAlarm(alarmSound || "alarm", isOnlineWeek);
+    } catch (err) {
+      console.error("Failed to play background alarm:", err);
+      // Fallback to default alarm looping as safe fallback
+      AlarmModule.playAlarm("alarm", true);
+    }
   } else if (
     (type === EventType.ACTION_PRESS && pressAction?.id === 'dismiss-alarm') ||
     type === EventType.DISMISSED ||
