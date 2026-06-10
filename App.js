@@ -255,9 +255,9 @@ export default function App() {
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => setIsSettingsVisible(true)}
-                className="w-10 h-10 rounded-full bg-surface-700 items-center justify-center border border-white/5"
+                className="px-4 py-2 rounded-full bg-surface-700 items-center justify-center border border-white/5"
               >
-                <Text className="text-lg">⚙️</Text>
+                <Text className="text-white text-xs font-semibold">Settings</Text>
               </TouchableOpacity>
             </View>
 
@@ -324,7 +324,7 @@ export default function App() {
               }}
             >
               <Text className="text-white text-lg font-bold tracking-wider">
-                ⏰ Ringing - Tap to Stop Alarm
+                Ringing - Tap to Stop Alarm
               </Text>
             </TouchableOpacity>
           </View>
@@ -359,200 +359,98 @@ export default function App() {
               </View>
 
               <ScrollView showsVerticalScrollIndicator={false}>
-                {isConfiguringUpload && (
-                  <View className="bg-cyan-500/10 border border-cyan-500/20 p-4 rounded-2xl mb-5">
-                    <Text className="text-cyan-400 text-sm font-bold">Setup Guide</Text>
-                    <Text className="text-gray-300 text-xs mt-1 leading-4">
-                      Please confirm your school's term system, total weeks, and learning mode first. Then tap the button at the bottom to upload your schedule photo!
-                    </Text>
-                  </View>
-                )}
-
-                {/* Term System Selector */}
-                <Text className="text-gray-400 text-sm font-semibold mb-2">Term System</Text>
-                <View className="flex-row gap-2 mb-4">
-                  {[
-                    { id: "semester", label: "Semester" },
-                    { id: "trimester", label: "Trimester" },
-                    { id: "quad", label: "Quad Term" },
-                  ].map((item) => {
-                    const isActive = termType === item.id;
-                    return (
-                      <TouchableOpacity
-                        key={item.id}
-                        activeOpacity={0.8}
-                        onPress={async () => {
-                          const defaultWeeks =
-                            item.id === "semester" ? 16 : item.id === "trimester" ? 14 : 10;
-                          setTermType(item.id);
-                          setTotalWeeks(defaultWeeks);
-                          setWeekInfo(getCurrentWeek(now, defaultWeeks, learningMode, onlineWeekPattern));
-                          await saveTermSettings(item.id, defaultWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
-                          await scheduleWeekAlarms();
-                        }}
-                        className={`flex-1 py-3 rounded-2xl items-center border ${
-                          isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
-                        }`}
-                      >
-                        <Text className={`font-bold text-sm ${isActive ? "text-surface-900" : "text-gray-300"}`}>
-                          {item.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* Total Weeks Selector */}
-                <Text className="text-gray-400 text-sm font-semibold mb-2">Total Weeks</Text>
-                <View className="flex-row gap-2 mb-4">
-                  {(termType === "semester"
-                    ? [16, 17, 18]
-                    : termType === "trimester"
-                    ? [12, 13, 14]
-                    : [10, 11]
-                  ).map((weeksNum) => {
-                    const isActive = totalWeeks === weeksNum;
-                    return (
-                      <TouchableOpacity
-                        key={weeksNum}
-                        activeOpacity={0.8}
-                        onPress={async () => {
-                          setTotalWeeks(weeksNum);
-                          setWeekInfo(getCurrentWeek(now, weeksNum, learningMode, onlineWeekPattern));
-                          await saveTermSettings(termType, weeksNum, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
-                          await scheduleWeekAlarms();
-                        }}
-                        className={`flex-1 py-3 rounded-2xl items-center border ${
-                          isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
-                        }`}
-                      >
-                        <Text className={`font-bold text-sm ${isActive ? "text-surface-900" : "text-gray-300"}`}>
-                          {weeksNum} Week
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* Learning Mode Selector */}
-                <Text className="text-gray-400 text-sm font-semibold mb-2">Learning Mode</Text>
-                <View className="flex-row gap-2 mb-4">
-                  {[
-                    { id: "blended", label: "Blended" },
-                    { id: "online", label: "Full Online" },
-                    { id: "inperson", label: "Full Face" },
-                  ].map((item) => {
-                    const isActive = learningMode === item.id;
-                    return (
-                      <TouchableOpacity
-                        key={item.id}
-                        activeOpacity={0.8}
-                        onPress={async () => {
-                          setLearningMode(item.id);
-                          setWeekInfo(getCurrentWeek(now, totalWeeks, item.id, onlineWeekPattern));
-                          await saveTermSettings(termType, totalWeeks, item.id, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
-                          await scheduleWeekAlarms();
-                        }}
-                        className={`flex-1 py-3 rounded-2xl items-center border ${
-                          isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
-                        }`}
-                      >
-                        <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
-                          {item.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* Online Weeks Pattern */}
-                {learningMode === "blended" && (
+                {isConfiguringUpload ? (
                   <>
-                    <Text className="text-gray-400 text-sm font-semibold mb-2">Online Weeks Pattern</Text>
+                    <View className="bg-cyan-500/10 border border-cyan-500/20 p-4 rounded-2xl mb-5">
+                      <Text className="text-cyan-400 text-sm font-bold">Setup Guide</Text>
+                      <Text className="text-gray-300 text-xs mt-1 leading-4">
+                        Please confirm your school's term system, total weeks, and learning mode first. Then tap the button at the bottom to upload your schedule photo!
+                      </Text>
+                    </View>
+
+                    {/* Term System Selector */}
+                    <Text className="text-gray-400 text-sm font-semibold mb-2">Term System</Text>
                     <View className="flex-row gap-2 mb-4">
                       {[
-                        { id: "even", label: "Even Weeks" },
-                        { id: "odd", label: "Odd Weeks" },
+                        { id: "semester", label: "Semester" },
+                        { id: "trimester", label: "Trimester" },
+                        { id: "quad", label: "Quad Term" },
                       ].map((item) => {
-                        const isActive = onlineWeekPattern === item.id;
+                        const isActive = termType === item.id;
                         return (
                           <TouchableOpacity
                             key={item.id}
                             activeOpacity={0.8}
                             onPress={async () => {
-                              setOnlineWeekPattern(item.id);
-                              setWeekInfo(getCurrentWeek(now, totalWeeks, learningMode, item.id));
-                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, item.id, alarmSound);
+                              const defaultWeeks =
+                                item.id === "semester" ? 16 : item.id === "trimester" ? 14 : 10;
+                              setTermType(item.id);
+                              setTotalWeeks(defaultWeeks);
+                              setWeekInfo(getCurrentWeek(now, defaultWeeks, learningMode, onlineWeekPattern));
+                              await saveTermSettings(item.id, defaultWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
                               await scheduleWeekAlarms();
                             }}
                             className={`flex-1 py-3 rounded-2xl items-center border ${
                               isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
                             }`}
                           >
-                            <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                            <Text className={`font-bold text-sm ${isActive ? "text-surface-900" : "text-gray-300"}`}>
                               {item.label}
                             </Text>
                           </TouchableOpacity>
                         );
                       })}
                     </View>
-                  </>
-                )}
 
-                {/* Online Alarm Offset */}
-                {(learningMode === "blended" || learningMode === "online") && (
-                  <>
-                    <Text className="text-gray-400 text-sm font-semibold mb-2">Online Alarm Offset</Text>
+                    {/* Total Weeks Selector */}
+                    <Text className="text-gray-400 text-sm font-semibold mb-2">Total Weeks</Text>
                     <View className="flex-row gap-2 mb-4">
-                      {[
-                        { val: 1, label: "1 Min" },
-                        { val: 5, label: "5 Min" },
-                        { val: 10, label: "10 Min" },
-                        { val: 15, label: "15 Min" },
-                      ].map((item) => {
-                        const isActive = onlineOffset === item.val;
+                      {(termType === "semester"
+                        ? [16, 17, 18]
+                        : termType === "trimester"
+                        ? [12, 13, 14]
+                        : [10, 11]
+                      ).map((weeksNum) => {
+                        const isActive = totalWeeks === weeksNum;
                         return (
                           <TouchableOpacity
-                            key={item.val}
+                            key={weeksNum}
                             activeOpacity={0.8}
                             onPress={async () => {
-                              setOnlineOffset(item.val);
-                              await saveTermSettings(termType, totalWeeks, learningMode, item.val, inpersonOffset, onlineWeekPattern, alarmSound);
+                              setTotalWeeks(weeksNum);
+                              setWeekInfo(getCurrentWeek(now, weeksNum, learningMode, onlineWeekPattern));
+                              await saveTermSettings(termType, weeksNum, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
                               await scheduleWeekAlarms();
                             }}
                             className={`flex-1 py-3 rounded-2xl items-center border ${
                               isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
                             }`}
                           >
-                            <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
-                              {item.label}
+                            <Text className={`font-bold text-sm ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                              {weeksNum} Week
                             </Text>
                           </TouchableOpacity>
                         );
                       })}
                     </View>
-                  </>
-                )}
 
-                {/* Face to Face Alarm Offset */}
-                {(learningMode === "blended" || learningMode === "inperson") && (
-                  <>
-                    <Text className="text-gray-400 text-sm font-semibold mb-2">Face to Face Alarm Offset</Text>
+                    {/* Learning Mode Selector */}
+                    <Text className="text-gray-400 text-sm font-semibold mb-2">Learning Mode</Text>
                     <View className="flex-row gap-2 mb-4">
                       {[
-                        { val: 15, label: "15 Min" },
-                        { val: 30, label: "30 Min" },
-                        { val: 60, label: "1 Hr" },
-                        { val: 120, label: "2 Hr" },
+                        { id: "blended", label: "Blended" },
+                        { id: "online", label: "Full Online" },
+                        { id: "inperson", label: "Full Face" },
                       ].map((item) => {
-                        const isActive = inpersonOffset === item.val;
+                        const isActive = learningMode === item.id;
                         return (
                           <TouchableOpacity
-                            key={item.val}
+                            key={item.id}
                             activeOpacity={0.8}
                             onPress={async () => {
-                              setInpersonOffset(item.val);
-                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, item.val, onlineWeekPattern, alarmSound);
+                              setLearningMode(item.id);
+                              setWeekInfo(getCurrentWeek(now, totalWeeks, item.id, onlineWeekPattern));
+                              await saveTermSettings(termType, totalWeeks, item.id, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound);
                               await scheduleWeekAlarms();
                             }}
                             className={`flex-1 py-3 rounded-2xl items-center border ${
@@ -566,50 +464,170 @@ export default function App() {
                         );
                       })}
                     </View>
+
+                    {/* Online Weeks Pattern */}
+                    {learningMode === "blended" && (
+                      <>
+                        <Text className="text-gray-400 text-sm font-semibold mb-2">Online Weeks Pattern</Text>
+                        <View className="flex-row gap-2 mb-4">
+                          {[
+                            { id: "even", label: "Even Weeks" },
+                            { id: "odd", label: "Odd Weeks" },
+                          ].map((item) => {
+                            const isActive = onlineWeekPattern === item.id;
+                            return (
+                              <TouchableOpacity
+                                key={item.id}
+                                activeOpacity={0.8}
+                                onPress={async () => {
+                                  setOnlineWeekPattern(item.id);
+                                  setWeekInfo(getCurrentWeek(now, totalWeeks, learningMode, item.id));
+                                  await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, item.id, alarmSound);
+                                  await scheduleWeekAlarms();
+                                }}
+                                className={`flex-1 py-3 rounded-2xl items-center border ${
+                                  isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
+                                }`}
+                              >
+                                <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                                  {item.label}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </>
+                    )}
+
+                    {/* Online Alarm Offset */}
+                    {(learningMode === "blended" || learningMode === "online") && (
+                      <>
+                        <Text className="text-gray-400 text-sm font-semibold mb-2">Online Alarm Offset</Text>
+                        <View className="flex-row gap-2 mb-4">
+                          {[
+                            { val: 1, label: "1 Min" },
+                            { val: 5, label: "5 Min" },
+                            { val: 10, label: "10 Min" },
+                            { val: 15, label: "15 Min" },
+                          ].map((item) => {
+                            const isActive = onlineOffset === item.val;
+                            return (
+                              <TouchableOpacity
+                                key={item.val}
+                                activeOpacity={0.8}
+                                onPress={async () => {
+                                  setOnlineOffset(item.val);
+                                  await saveTermSettings(termType, totalWeeks, learningMode, item.val, inpersonOffset, onlineWeekPattern, alarmSound);
+                                  await scheduleWeekAlarms();
+                                }}
+                                className={`flex-1 py-3 rounded-2xl items-center border ${
+                                  isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
+                                }`}
+                              >
+                                <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                                  {item.label}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </>
+                    )}
+
+                    {/* Face to Face Alarm Offset */}
+                    {(learningMode === "blended" || learningMode === "inperson") && (
+                      <>
+                        <Text className="text-gray-400 text-sm font-semibold mb-2">Face to Face Alarm Offset</Text>
+                        <View className="flex-row gap-2 mb-4">
+                          {[
+                            { val: 15, label: "15 Min" },
+                            { val: 30, label: "30 Min" },
+                            { val: 60, label: "1 Hr" },
+                            { val: 120, label: "2 Hr" },
+                          ].map((item) => {
+                            const isActive = inpersonOffset === item.val;
+                            return (
+                              <TouchableOpacity
+                                key={item.val}
+                                activeOpacity={0.8}
+                                onPress={async () => {
+                                  setInpersonOffset(item.val);
+                                  await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, item.val, onlineWeekPattern, alarmSound);
+                                  await scheduleWeekAlarms();
+                                }}
+                                className={`flex-1 py-3 rounded-2xl items-center border ${
+                                  isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
+                                }`}
+                              >
+                                <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                                  {item.label}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </>
+                    )}
+
+                    {/* Alarm Sound Selector */}
+                    <Text className="text-gray-400 text-sm font-semibold mb-2">Alarm Sound</Text>
+                    <View className="flex-row gap-2 mb-6">
+                      {[
+                        { id: "alarm", label: "Default Beep" },
+                        { id: "chime", label: "Gentle Chime" },
+                        { id: "beep", label: "Double Beep" },
+                      ].map((item) => {
+                        const isActive = alarmSound === item.id;
+                        return (
+                          <TouchableOpacity
+                            key={item.id}
+                            activeOpacity={0.8}
+                            onPress={async () => {
+                              setAlarmSound(item.id);
+                              await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, item.id);
+                              await scheduleWeekAlarms();
+
+                              // Play a brief sample preview of the selected sound
+                              try {
+                                AlarmModule.stopAlarm();
+                                // Play without looping so it stops naturally or gets cut off
+                                AlarmModule.playAlarm(item.id, false);
+                                setTimeout(() => {
+                                  AlarmModule.stopAlarm();
+                                }, 2000); // stop preview after 2 seconds
+                              } catch (err) {
+                                console.error("Failed to play sound preview:", err);
+                              }
+                            }}
+                            className={`flex-1 py-3 rounded-2xl items-center border ${
+                              isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
+                            }`}
+                          >
+                            <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    {/* API Key Input */}
+                    <Text className="text-gray-400 text-sm font-semibold mb-2">Gemini API Key</Text>
+                    <TextInput
+                      value={apiKey}
+                      onChangeText={async (text) => {
+                        setApiKey(text);
+                        await saveApiKey(text);
+                      }}
+                      placeholder="Enter Gemini API Key..."
+                      placeholderTextColor="#9ca3af"
+                      secureTextEntry={true}
+                      className="bg-surface-700 border border-white/5 rounded-2xl px-4 py-3.5 text-white mb-6 text-sm"
+                    />
                   </>
                 )}
-
-                {/* Alarm Sound Selector */}
-                <Text className="text-gray-400 text-sm font-semibold mb-2">Alarm Sound</Text>
-                <View className="flex-row gap-2 mb-6">
-                  {[
-                    { id: "alarm", label: "Default Beep" },
-                    { id: "chime", label: "Gentle Chime" },
-                    { id: "beep", label: "Double Beep" },
-                  ].map((item) => {
-                    const isActive = alarmSound === item.id;
-                    return (
-                      <TouchableOpacity
-                        key={item.id}
-                        activeOpacity={0.8}
-                        onPress={async () => {
-                          setAlarmSound(item.id);
-                          await saveTermSettings(termType, totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, item.id);
-                          await scheduleWeekAlarms();
-
-                          // Play a brief sample preview of the selected sound
-                          try {
-                            AlarmModule.stopAlarm();
-                            // Play without looping so it stops naturally or gets cut off
-                            AlarmModule.playAlarm(item.id, false);
-                            setTimeout(() => {
-                              AlarmModule.stopAlarm();
-                            }, 2000); // stop preview after 2 seconds
-                          } catch (err) {
-                            console.error("Failed to play sound preview:", err);
-                          }
-                        }}
-                        className={`flex-1 py-3 rounded-2xl items-center border ${
-                          isActive ? "bg-cyan-500 border-cyan-500" : "bg-surface-700 border-white/5"
-                        }`}
-                      >
-                        <Text className={`font-bold text-xs ${isActive ? "text-surface-900" : "text-gray-300"}`}>
-                          {item.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
 
                 {isParsing ? (
                   <View className="py-6 items-center">
@@ -641,7 +659,7 @@ export default function App() {
                           className="flex-[2] bg-cyan-500 py-4 rounded-2xl items-center"
                         >
                           <Text className="text-surface-900 text-base font-bold">
-                            📸 Select Photo
+                            Select Photo
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -653,7 +671,7 @@ export default function App() {
                           className="bg-cyan-500 py-4 rounded-2xl items-center"
                         >
                           <Text className="text-surface-900 text-base font-bold">
-                            📸 Upload Schedule Image
+                            Upload Schedule Image
                           </Text>
                         </TouchableOpacity>
 
