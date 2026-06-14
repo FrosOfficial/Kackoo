@@ -1,6 +1,6 @@
 {
   "name": "alarm-module",
   "version": "1.0.0",
-  "main": "index.js",
-  "react-native": "index.js"
+  "main": "index.ts",
+  "react-native": "index.ts"
 }

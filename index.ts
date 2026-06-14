@@ -1,10 +1,10 @@
-import { registerRootComponent } from 'expo';
-import notifee, { EventType } from '@notifee/react-native';
-import AlarmModule from 'alarm-module';
-import { loadTermSettings } from './utils/storage';
-import { getCurrentWeek } from './utils/weekLogic';
+import { registerRootComponent } from "expo";
+import notifee, { EventType } from "@notifee/react-native";
+import AlarmModule from "alarm-module";
+import { loadTermSettings } from "./utils/storage";
+import { getCurrentWeek } from "./utils/weekLogic";
 
-import App from './App';
+import App from "./App";
 
 // Handle alarm triggers and dismiss from background/lockscreen
 notifee.onBackgroundEvent(async ({ type, detail }) => {
@@ -14,23 +14,32 @@ notifee.onBackgroundEvent(async ({ type, detail }) => {
   if (type === EventType.DELIVERED) {
     console.log("Alarm triggered! Playing alarm stream audio...");
     try {
-      const { totalWeeks, learningMode, onlineWeekPattern, alarmSound } = await loadTermSettings();
-      const currentWeekInfo = getCurrentWeek(new Date(), totalWeeks, learningMode, onlineWeekPattern);
+      const { totalWeeks, learningMode, onlineWeekPattern, alarmSound } =
+        await loadTermSettings();
+      const currentWeekInfo = getCurrentWeek(
+        new Date(),
+        totalWeeks,
+        learningMode,
+        onlineWeekPattern
+      );
       const isOnlineWeek = currentWeekInfo?.mode === "Online";
-      AlarmModule.playAlarm(alarmSound || "alarm", isOnlineWeek);
+      AlarmModule.playAlarm(alarmSound || "default", isOnlineWeek ?? true);
     } catch (err) {
       console.error("Failed to play background alarm:", err);
       // Fallback to default alarm looping as safe fallback
-      AlarmModule.playAlarm("alarm", true);
+      AlarmModule.playAlarm("default", true);
     }
   } else if (
-    (type === EventType.ACTION_PRESS && pressAction?.id === 'dismiss-alarm') ||
+    (type === EventType.ACTION_PRESS &&
+      pressAction?.id === "dismiss-alarm") ||
     type === EventType.DISMISSED ||
     type === EventType.PRESS
   ) {
     console.log("Stopping alarm stream audio...");
     AlarmModule.stopAlarm();
-    await notifee.cancelNotification(notification.id);
+    if (notification?.id) {
+      await notifee.cancelNotification(notification.id);
+    }
   }
 });
 

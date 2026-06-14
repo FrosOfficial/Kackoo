@@ -1,8 +1,9 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { DAY_NAMES } from "../data/scheduleData";
+import type { DayName, Schedule, ClassEntry } from "../types";
 
-const DAY_ABBREV = {
+const DAY_ABBREV: Record<DayName, string> = {
   Monday: "Mon",
   Tuesday: "Tue",
   Wednesday: "Wed",
@@ -12,11 +13,23 @@ const DAY_ABBREV = {
   Sunday: "Sun",
 };
 
-export default function DaySelector({ selectedDay, onSelectDay, todayName, schedule = {} }) {
-  const renderDayCard = (day) => {
+interface DaySelectorProps {
+  selectedDay: DayName;
+  onSelectDay: (day: DayName) => void;
+  todayName: DayName;
+  schedule: Schedule;
+}
+
+export default function DaySelector({
+  selectedDay,
+  onSelectDay,
+  todayName,
+  schedule = {} as Schedule,
+}: DaySelectorProps) {
+  const renderDayCard = (day: DayName) => {
     const isSelected = selectedDay === day;
     const isToday = todayName === day;
-    const classes = schedule[day] || [];
+    const classes: ClassEntry[] = schedule[day] || [];
 
     return (
       <TouchableOpacity

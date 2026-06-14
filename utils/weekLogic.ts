@@ -1,3 +1,5 @@
+import type { LearningMode, OnlineWeekPattern, WeekInfo } from "../types";
+
 // Week logic with configurable semester/term duration.
 // Pattern: odd weeks = In-person, even weeks = Online (except last 2 weeks which are always In-person).
 
@@ -7,11 +9,21 @@ const DEFAULT_SEMESTER_START = new Date(2026, 3, 6); // April 6, 2026
 
 /**
  * Get the current week info based on a given date and term settings.
- * Returns { weekNum, mode, label, startDate, endDate } or null if outside term.
+ * Returns WeekInfo or null if outside term.
  */
-export function getCurrentWeek(date = new Date(), totalWeeks = 14, learningMode = "blended", onlineWeekPattern = "even", semesterStart = DEFAULT_SEMESTER_START) {
+export function getCurrentWeek(
+  date: Date = new Date(),
+  totalWeeks: number = 14,
+  learningMode: LearningMode = "blended",
+  onlineWeekPattern: OnlineWeekPattern = "even",
+  semesterStart: Date = DEFAULT_SEMESTER_START
+): WeekInfo | null {
   const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const start = new Date(semesterStart.getFullYear(), semesterStart.getMonth(), semesterStart.getDate());
+  const start = new Date(
+    semesterStart.getFullYear(),
+    semesterStart.getMonth(),
+    semesterStart.getDate()
+  );
 
   const diffMs = d.getTime() - start.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -23,7 +35,7 @@ export function getCurrentWeek(date = new Date(), totalWeeks = 14, learningMode 
   if (weekIndex >= totalWeeks) return null;
 
   const weekNum = weekIndex + 1;
-  let mode = "Online";
+  let mode: "Online" | "In-person" = "Online";
   let label = "";
 
   if (learningMode === "online") {
@@ -68,22 +80,46 @@ export function getCurrentWeek(date = new Date(), totalWeeks = 14, learningMode 
 /**
  * Returns just the mode string ("Online" or "In-person") or null.
  */
-export function getWeekMode(date = new Date(), totalWeeks = 14, learningMode = "blended", onlineWeekPattern = "even", semesterStart = DEFAULT_SEMESTER_START) {
-  const week = getCurrentWeek(date, totalWeeks, learningMode, onlineWeekPattern, semesterStart);
+export function getWeekMode(
+  date: Date = new Date(),
+  totalWeeks: number = 14,
+  learningMode: LearningMode = "blended",
+  onlineWeekPattern: OnlineWeekPattern = "even",
+  semesterStart: Date = DEFAULT_SEMESTER_START
+): "Online" | "In-person" | null {
+  const week = getCurrentWeek(
+    date,
+    totalWeeks,
+    learningMode,
+    onlineWeekPattern,
+    semesterStart
+  );
   return week ? week.mode : null;
 }
 
 /**
  * Returns just the week number or null.
  */
-export function getWeekNumber(date = new Date(), totalWeeks = 14, learningMode = "blended", onlineWeekPattern = "even", semesterStart = DEFAULT_SEMESTER_START) {
-  const week = getCurrentWeek(date, totalWeeks, learningMode, onlineWeekPattern, semesterStart);
+export function getWeekNumber(
+  date: Date = new Date(),
+  totalWeeks: number = 14,
+  learningMode: LearningMode = "blended",
+  onlineWeekPattern: OnlineWeekPattern = "even",
+  semesterStart: Date = DEFAULT_SEMESTER_START
+): number | null {
+  const week = getCurrentWeek(
+    date,
+    totalWeeks,
+    learningMode,
+    onlineWeekPattern,
+    semesterStart
+  );
   return week ? week.weekNum : null;
 }
 
 /**
  * Get the semester start date (for reference/debugging).
  */
-export function getSemesterStart() {
+export function getSemesterStart(): Date {
   return new Date(DEFAULT_SEMESTER_START);
 }

@@ -5,15 +5,15 @@ import notifee, {
   AlarmType,
 } from "@notifee/react-native";
 import { Platform } from "react-native";
-import { SCHEDULE } from "../data/scheduleData";
 import { getCurrentWeek } from "./weekLogic";
 import { loadSchedule, loadTermSettings } from "./storage";
+import type { ClassEntry } from "../types";
 
 /**
  * Create the alarm notification channel (Android only).
  * Uses ALARM category for full-screen, high-priority alerts.
  */
-async function ensureChannel(soundName = "alarm") {
+async function ensureChannel(soundName: string = "default"): Promise<void> {
   if (Platform.OS === "android") {
     await notifee.createChannel({
       id: `class-alarm-${soundName}`,
@@ -30,7 +30,7 @@ async function ensureChannel(soundName = "alarm") {
 /**
  * Request notification/alarm permissions.
  */
-export async function requestPermissions() {
+export async function requestPermissions(): Promise<boolean> {
   console.log("Requesting permissions...");
   try {
     // Request notification permission
@@ -40,7 +40,10 @@ export async function requestPermissions() {
     // On Android 12+, request exact alarm permission
     if (Platform.OS === "android") {
       const alarmPerm = await notifee.getNotificationSettings();
-      console.log("Android Alarm permission status:", alarmPerm.android?.alarm);
+      console.log(
+        "Android Alarm permission status:",
+        alarmPerm.android?.alarm
+      );
       if (alarmPerm.android?.alarm !== 1) {
         console.log("Opening system settings for exact alarms...");
         await notifee.openAlarmPermissionSettings();
@@ -56,10 +59,15 @@ export async function requestPermissions() {
   }
 }
 
+interface ParsedTime {
+  hours: number;
+  minutes: number;
+}
+
 /**
  * Parse a time string like "7:00AM" or "2:00PM" into { hours, minutes } in 24h format.
  */
-function parseTime(timeStr) {
+function parseTime(timeStr: string): ParsedTime | null {
   const match = timeStr.match(/^(\d{1,2}):(\d{2})(AM|PM)$/i);
   if (!match) return null;
 
@@ -77,18 +85,25 @@ function parseTime(timeStr) {
  * Cancel all existing alarms and reschedule for the current week.
  * Uses notifee's alarm trigger for exact timing.
  */
-export async function scheduleWeekAlarms() {
+export async function scheduleWeekAlarms(): Promise<void> {
   // Cancel all existing scheduled notifications
   await notifee.cancelAllNotifications();
 
   const now = new Date();
-  const { totalWeeks, learningMode, onlineOffset, inpersonOffset, onlineWeekPattern, alarmSound } = await loadTermSettings();
+  const {
+    totalWeeks,
+    learningMode,
+    onlineOffset,
+    inpersonOffset,
+    onlineWeekPattern,
+    alarmSound,
+  } = await loadTermSettings();
   const weekInfo = getCurrentWeek(now, totalWeeks, learningMode, onlineWeekPattern);
 
   if (!weekInfo) return;
 
   const isOnline = weekInfo.mode === "Online";
-  const activeSound = alarmSound || "alarm";
+  const activeSound = alarmSound || "default";
 
   await ensureChannel(activeSound);
 
@@ -100,10 +115,18 @@ export async function scheduleWeekAlarms() {
     targetDate.setDate(now.getDate() + dayOffset);
 
     const jsDayIndex = targetDate.getDay();
-    const dayNameMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayNameMap = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ] as const;
     const scheduleDayName = dayNameMap[jsDayIndex];
 
-    const classes = scheduleData[scheduleDayName] || [];
+    const classes: ClassEntry[] = scheduleData[scheduleDayName] || [];
 
     // Parse classes and sort them by start time
     const classesWithTime = classes
@@ -119,15 +142,17 @@ export async function scheduleWeekAlarms() {
       .sort((a, b) => a.mins - b.mins);
 
     // If it's an In-person week, only schedule the FIRST class of the day.
-    const activeClasses = (!isOnline && classesWithTime.length > 0)
-      ? [classesWithTime[0]]
-      : classesWithTime;
+    const activeClasses =
+      !isOnline && classesWithTime.length > 0
+        ? [classesWithTime[0]]
+        : classesWithTime;
 
     for (const item of activeClasses) {
       const { cls, time } = item;
+      if (!time) continue;
 
       // Custom offsets or standard fallbacks
-      const minutesLeft = isOnline ? (onlineOffset || 5) : (inpersonOffset || 15);
+      const minutesLeft = isOnline ? onlineOffset || 5 : inpersonOffset || 15;
 
       // Build the trigger date
       const triggerDate = new Date(targetDate);
@@ -137,7 +162,7 @@ export async function scheduleWeekAlarms() {
       if (triggerDate <= now) continue;
 
       // Build notification body
-      let body;
+      let body: string;
       if (isOnline) {
         body = `${cls.code} starts at ${cls.start} - Online class this week(${weekInfo.weekNum})`;
       } else {
@@ -145,7 +170,7 @@ export async function scheduleWeekAlarms() {
       }
 
       // Format offset string for high-premium title view
-      let offsetStr;
+      let offsetStr: string;
       if (minutesLeft >= 60) {
         const hrs = minutesLeft / 60;
         offsetStr = `${hrs} hour${hrs > 1 ? "s" : ""}`;
@@ -198,10 +223,13 @@ export async function scheduleWeekAlarms() {
 /**
  * Schedule a test alarm to fire 10 seconds from now.
  */
-export async function scheduleTestAlarm() {
+export async function scheduleTestAlarm(): Promise<void> {
   await ensureChannel();
   const triggerTime = Date.now() + 10000; // 10 seconds from now
-  console.log("Scheduling test alarm for:", new Date(triggerTime).toTimeString());
+  console.log(
+    "Scheduling test alarm for:",
+    new Date(triggerTime).toTimeString()
+  );
 
   try {
     await notifee.createTriggerNotification(
@@ -209,10 +237,10 @@ export async function scheduleTestAlarm() {
         title: "⏰ Kackoo Test Alarm",
         body: "If you see this, your alarm configuration is working perfectly!",
         android: {
-          channelId: "class-alarm-v4",
+          channelId: "class-alarm-default",
           category: AndroidCategory.ALARM,
           importance: AndroidImportance.HIGH,
-          sound: "alarm",
+          sound: "default",
           vibrationPattern: [500, 250, 500, 250],
           loopSound: true,
           ongoing: true,
@@ -246,4 +274,3 @@ export async function scheduleTestAlarm() {
     console.error("Failed to schedule test alarm:", err);
   }
 }
-

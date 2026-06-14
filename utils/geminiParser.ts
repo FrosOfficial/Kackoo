@@ -1,19 +1,23 @@
+import type { Schedule } from "../types";
+
 // Read the developer OpenRouter API key from an environment variable.
 // For local dev, put EXPO_PUBLIC_OPENROUTER_API_KEY=your_key in a .env file.
-export const DEVELOPER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY || "";
+export const DEVELOPER_API_KEY: string =
+  process.env.EXPO_PUBLIC_OPENROUTER_API_KEY || "";
 
 /**
  * Parses a schedule image using OpenRouter's free vision model.
- * 
- * @param {string} base64Data The base64-encoded image data.
- * @param {string} mimeType The mime type of the image (e.g. 'image/jpeg').
- * @param {string} apiKey The user's OpenRouter API Key (optional).
- * @returns {Promise<object>} The parsed schedule object.
  */
-export async function parseScheduleImage(base64Data, mimeType, apiKey) {
+export async function parseScheduleImage(
+  base64Data: string,
+  mimeType: string,
+  apiKey: string
+): Promise<Schedule> {
   const activeKey = apiKey || DEVELOPER_API_KEY;
   if (!activeKey) {
-    throw new Error("OpenRouter API key is required. Please set EXPO_PUBLIC_OPENROUTER_API_KEY in your .env file.");
+    throw new Error(
+      "OpenRouter API key is required. Please set EXPO_PUBLIC_OPENROUTER_API_KEY in your .env file."
+    );
   }
 
   const prompt = `
@@ -44,46 +48,51 @@ export async function parseScheduleImage(base64Data, mimeType, apiKey) {
   // Format mime type and base64 for image URL
   const dataUrl = `data:${mimeType || "image/jpeg"};base64,${base64Data}`;
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${activeKey}`,
-      "HTTP-Referer": "https://github.com/FrosOfficial/Kackoo",
-      "X-Title": "Kackoo"
-    },
-    body: JSON.stringify({
-      model: "openrouter/free",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: prompt
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: dataUrl
-              }
-            }
-          ]
-        }
-      ]
-    })
-  });
+  const response = await fetch(
+    "https://openrouter.ai/api/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${activeKey}`,
+        "HTTP-Referer": "https://github.com/FrosOfficial/Kackoo",
+        "X-Title": "Kackoo",
+      },
+      body: JSON.stringify({
+        model: "openrouter/free",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: prompt,
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: dataUrl,
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    }
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+    throw new Error(
+      `OpenRouter API error: ${response.status} - ${errorText}`
+    );
   }
 
   const result = await response.json();
-  const text = result.choices[0].message.content;
+  const text: string = result.choices[0].message.content;
   console.log("Raw response from OpenRouter:", text);
-  
+
   // Parse and validate the response
-  const parsed = JSON.parse(text.trim());
+  const parsed: Schedule = JSON.parse(text.trim());
   return parsed;
 }

@@ -1,7 +1,9 @@
+import type { DayName, Schedule } from "../types";
+
 // Full weekly class schedule with consolidated time blocks.
 // Each entry represents a single class session (multi-slot blocks merged).
 
-export const SCHEDULE = {
+export const SCHEDULE: Schedule = {
   Monday: [],
   Tuesday: [],
   Wednesday: [],
@@ -12,7 +14,7 @@ export const SCHEDULE = {
 };
 
 // Ordered day names for navigation
-export const DAY_NAMES = [
+export const DAY_NAMES: DayName[] = [
   "Monday",
   "Tuesday",
   "Wednesday",
@@ -23,8 +25,16 @@ export const DAY_NAMES = [
 ];
 
 // Map JS Date.getDay() (0=Sun) to our day names
-export function getDayName(date) {
-  const jsDay = date.getDay(); // 0=Sun, 1=Mon, ...
-  const map = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  return map[jsDay];
+const DAY_MAP: DayName[] = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+export function getDayName(date: Date): DayName {
+  return DAY_MAP[date.getDay()];
 }

@@ -1,14 +1,20 @@
 import React from "react";
 import { View, Text } from "react-native";
+import type { ClassEntry, WeekInfo } from "../types";
 
-export default function ClassCard({ cls, weekInfo }) {
+interface ClassCardProps {
+  cls: ClassEntry;
+  weekInfo: WeekInfo | null;
+}
+
+export default function ClassCard({ cls, weekInfo }: ClassCardProps) {
   if (!weekInfo) return null;
 
   const isOnline = weekInfo.mode === "Online";
   const accentColor = isOnline ? "#06b6d4" : "#f59e0b";
 
   // Build the status line
-  let statusText;
+  let statusText: string;
   if (isOnline) {
     statusText = `Online class at this week(${weekInfo.weekNum})`;
   } else {

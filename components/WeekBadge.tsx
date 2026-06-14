@@ -1,7 +1,12 @@
 import React from "react";
 import { View, Text } from "react-native";
+import type { WeekInfo } from "../types";
 
-export default function WeekBadge({ weekInfo }) {
+interface WeekBadgeProps {
+  weekInfo: WeekInfo | null;
+}
+
+export default function WeekBadge({ weekInfo }: WeekBadgeProps) {
   if (!weekInfo) {
     return (
       <View className="self-center px-5 py-2 rounded-pill bg-surface-600 mb-4">
