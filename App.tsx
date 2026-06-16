@@ -183,7 +183,11 @@ export default function App() {
         }
       } catch (err: any) {
         console.error(err);
-        alert("Failed to parse schedule: " + err.message);
+        if (err.message === "NOT_A_SCHEDULE") {
+          alert("The uploaded image doesn't look like a school schedule. Please upload a clear schedule image.");
+        } else {
+          alert("Failed to parse schedule: " + err.message);
+        }
       } finally {
         setIsParsing(false);
       }

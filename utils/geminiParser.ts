@@ -21,7 +21,11 @@ export async function parseScheduleImage(
   }
 
   const prompt = `
-    Analyze this class schedule image and extract all classes into structured JSON.
+    Analyze this image. First, verify if it is a school/university class schedule, calendar grid, or course list.
+    If it is NOT a class schedule (e.g., it is a selfie, food, animal, random text, landscape, meme, etc.), return EXACTLY this JSON and nothing else:
+    { "error": "NOT_A_SCHEDULE" }
+
+    If it IS a class schedule, extract all classes into structured JSON.
     
     Structure the response exactly as follows:
     {
@@ -92,7 +96,11 @@ export async function parseScheduleImage(
   const text: string = result.choices[0].message.content;
   console.log("Raw response from OpenRouter:", text);
 
-  // Parse and validate the response
-  const parsed: Schedule = JSON.parse(text.trim());
-  return parsed;
+  // Clean JSON response from potential markdown formatting wrappers
+  const cleanText = text.trim().replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+  const parsed = JSON.parse(cleanText);
+  if (parsed.error === "NOT_A_SCHEDULE") {
+    throw new Error("NOT_A_SCHEDULE");
+  }
+  return parsed as Schedule;
 }
