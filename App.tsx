@@ -13,6 +13,7 @@ import {
   Modal,
   ActivityIndicator,
   StyleSheet,
+  Image,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -61,6 +62,7 @@ const ONBOARDING_STEPS = [
   { num: 4, label: "WEEK PATTERN" },
   { num: 5, label: "ALARM OFFSETS" },
   { num: 6, label: "ALARM SOUND" },
+  { num: 7, label: "UPLOAD SCHEDULE" },
 ];
 
 export default function App() {
@@ -85,6 +87,7 @@ export default function App() {
   const [isParsing, setIsParsing] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [setupStep, setSetupStep] = useState(1);
+  const [refActiveTab, setRefActiveTab] = useState<"tan" | "blocks" | "badges">("tan");
 
   // Stop alarm and cancel notification
   const handleStopAlarm = async () => {
@@ -96,6 +99,38 @@ export default function App() {
       await scheduleWeekAlarms();
     } catch (err) {
       console.error("Error stopping alarm:", err);
+    }
+  };
+
+  // Finish onboarding setup and save settings
+  const handleFinishSetup = async () => {
+    try {
+      const patternToSave: OnlineWeekPattern = onlineWeekPattern || "even";
+      const soundToSave: AlarmSound = alarmSound || "default";
+      await saveTermSettings(
+        termType!,
+        totalWeeks!,
+        learningMode!,
+        onlineOffset,
+        inpersonOffset,
+        patternToSave,
+        soundToSave
+      );
+      await setAppInitialized(true);
+      setIsFirstTime(false);
+      setIsSettingsVisible(false);
+      setWeekInfo(
+        getCurrentWeek(
+          now,
+          totalWeeks!,
+          learningMode!,
+          patternToSave
+        )
+      );
+      await scheduleWeekAlarms();
+    } catch (err: any) {
+      console.error("Error finishing setup:", err);
+      alert("Failed to finish setup: " + err.message);
     }
   };
 
@@ -135,9 +170,14 @@ export default function App() {
         if (parsed && typeof parsed === "object") {
           await saveSchedule(parsed);
           setSchedule(parsed);
-          await scheduleWeekAlarms();
-          alert("Schedule updated successfully!");
-          setIsSettingsVisible(false);
+          if (isFirstTime) {
+            await handleFinishSetup();
+            alert("Schedule uploaded and setup complete!");
+          } else {
+            await scheduleWeekAlarms();
+            alert("Schedule updated successfully!");
+            setIsSettingsVisible(false);
+          }
         } else {
           throw new Error("Invalid schedule format returned.");
         }
@@ -326,11 +366,13 @@ export default function App() {
 
   // Pill button renderer for selector groups
   const renderPill = (
+    key: string,
     label: string,
     isActive: boolean,
     onPress: () => void
   ) => (
     <TouchableOpacity
+      key={key}
       activeOpacity={0.8}
       onPress={onPress}
       style={[s.pill, isActive && s.pillActive]}
@@ -489,8 +531,8 @@ export default function App() {
               }
             }}
           >
-            <View style={s.modalOverlay}>
-              <View style={s.modalSheet}>
+            <View style={[s.modalOverlay, isFirstTime && s.modalOverlayFull]}>
+              <View style={[s.modalSheet, isFirstTime && s.modalSheetFull]}>
                 {/* Header */}
                 <View style={s.modalHeader}>
                   <View>
@@ -533,7 +575,7 @@ export default function App() {
                               { id: "quad" as TermType, label: "Quad Term" },
                             ] as const
                           ).map((item) =>
-                            renderPill(item.label, termType === item.id, () => {
+                            renderPill(item.id, item.label, termType === item.id, () => {
                               const defaultWeeks =
                                 item.id === "semester"
                                   ? 16
@@ -559,6 +601,7 @@ export default function App() {
                               : [10, 11]
                             ).map((weeksNum) =>
                               renderPill(
+                                `weeks-${weeksNum}`,
                                 `${weeksNum} Weeks`,
                                 totalWeeks === weeksNum,
                                 () => {
@@ -583,6 +626,7 @@ export default function App() {
                               ] as const
                             ).map((item) =>
                               renderPill(
+                                item.id,
                                 item.label,
                                 learningMode === item.id,
                                 () => {
@@ -611,6 +655,7 @@ export default function App() {
                               ] as const
                             ).map((item) =>
                               renderPill(
+                                item.id,
                                 item.label,
                                 onlineWeekPattern === item.id,
                                 () => {
@@ -638,6 +683,7 @@ export default function App() {
                                   { val: 15, label: "15 Min" },
                                 ].map((item) =>
                                   renderPill(
+                                    `online-${item.val}`,
                                     item.label,
                                     onlineOffset === item.val,
                                     () => setOnlineOffset(item.val)
@@ -661,6 +707,7 @@ export default function App() {
                                   { val: 120, label: "2 Hr" },
                                 ].map((item) =>
                                   renderPill(
+                                    `f2f-${item.val}`,
                                     item.label,
                                     inpersonOffset === item.val,
                                     () => setInpersonOffset(item.val)
@@ -695,6 +742,7 @@ export default function App() {
                               ] as const
                             ).map((item) =>
                               renderPill(
+                                item.id,
                                 item.label,
                                 alarmSound === item.id,
                                 () => {
@@ -708,41 +756,102 @@ export default function App() {
                             Tap a sound to preview it
                           </Text>
 
-                          <TouchableOpacity
-                            activeOpacity={0.8}
-                            onPress={async () => {
-                              const patternToSave: OnlineWeekPattern =
-                                onlineWeekPattern || "even";
-                              const soundToSave: AlarmSound =
-                                alarmSound || "default";
-                              await saveTermSettings(
-                                termType!,
-                                totalWeeks!,
-                                learningMode!,
-                                onlineOffset,
-                                inpersonOffset,
-                                patternToSave,
-                                soundToSave
-                              );
-                              await setAppInitialized(true);
-                              setIsFirstTime(false);
-                              setIsSettingsVisible(false);
-                              setWeekInfo(
-                                getCurrentWeek(
-                                  now,
-                                  totalWeeks!,
-                                  learningMode!,
-                                  patternToSave
-                                )
-                              );
-                              await scheduleWeekAlarms();
-                            }}
-                            style={[s.actionBtn, s.finishBtn]}
-                          >
-                            <Text style={s.actionBtnText}>
-                              FINISH SETUP & SAVE
-                            </Text>
-                          </TouchableOpacity>
+                          {setupStep === 6 && (
+                            <TouchableOpacity
+                              activeOpacity={0.8}
+                              onPress={() => setSetupStep(7)}
+                              style={s.actionBtn}
+                            >
+                              <Text style={s.actionBtnText}>NEXT STEP →</Text>
+                            </TouchableOpacity>
+                          )}
+                        </SectionCard>
+                      )}
+
+                      {/* Step 7: Upload Schedule */}
+                      {setupStep >= 7 && (
+                        <SectionCard title="UPLOAD YOUR SCHEDULE" stepNum={7}>
+                          <Text style={s.infoText}>
+                            Upload a screenshot or photo of your class schedule. Our AI will automatically parse your classes. You can skip this and customize it later.
+                          </Text>
+
+                          <View style={s.tabHeader}>
+                            <Text style={s.tabHeaderLabel}>REFERENCE STYLES:</Text>
+                            <View style={s.tabRow}>
+                              {(
+                                [
+                                  { id: "tan" as const, label: "Portal Grid" },
+                                  { id: "blocks" as const, label: "Block Calendar" },
+                                  { id: "badges" as const, label: "Class Cards" },
+                                ] as const
+                              ).map((tab) => (
+                                <TouchableOpacity
+                                  key={tab.id}
+                                  onPress={() => setRefActiveTab(tab.id)}
+                                  style={[s.tabBtn, refActiveTab === tab.id && s.tabBtnActive]}
+                                >
+                                  <Text style={[s.tabBtnText, refActiveTab === tab.id && s.tabBtnTextActive]}>
+                                    {tab.label}
+                                  </Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          </View>
+
+                          <View style={s.refImageContainer}>
+                            {refActiveTab === "tan" && (
+                              <Image
+                                source={require("./assets/ref_schedule_tan.png")}
+                                style={s.refImage}
+                                resizeMode="contain"
+                              />
+                            )}
+                            {refActiveTab === "blocks" && (
+                              <Image
+                                source={require("./assets/ref_schedule_blocks.png")}
+                                style={s.refImage}
+                                resizeMode="contain"
+                              />
+                            )}
+                            {refActiveTab === "badges" && (
+                              <Image
+                                source={require("./assets/ref_schedule_badges.png")}
+                                style={s.refImage}
+                                resizeMode="contain"
+                              />
+                            )}
+                          </View>
+
+                          {isParsing ? (
+                            <View style={s.parsingContainer}>
+                              <ActivityIndicator size="large" color="#06b6d4" />
+                              <Text style={s.parsingText}>
+                                AI is reading your schedule...
+                              </Text>
+                            </View>
+                          ) : (
+                            <View style={{ gap: 10, marginTop: 8 }}>
+                              <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={handlePickImage}
+                                style={s.actionBtn}
+                              >
+                                <Text style={s.actionBtnText}>
+                                  UPLOAD SCHEDULE IMAGE
+                                </Text>
+                              </TouchableOpacity>
+
+                              <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={handleFinishSetup}
+                                style={s.secondaryBtn}
+                              >
+                                <Text style={s.secondaryBtnText}>
+                                  SKIP FOR NOW & FINISH
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
                         </SectionCard>
                       )}
                     </View>
@@ -758,7 +867,7 @@ export default function App() {
                               { id: "quad" as TermType, label: "Quad Term" },
                             ] as const
                           ).map((item) =>
-                            renderPill(item.label, termType === item.id, async () => {
+                            renderPill(item.id, item.label, termType === item.id, async () => {
                               const defaultWeeks =
                                 item.id === "semester"
                                   ? 16
@@ -799,6 +908,7 @@ export default function App() {
                             : [10, 11]
                           ).map((weeksNum) =>
                             renderPill(
+                              `weeks-${weeksNum}`,
                               `${weeksNum} Weeks`,
                               totalWeeks === weeksNum,
                               async () => {
@@ -837,6 +947,7 @@ export default function App() {
                             ] as const
                           ).map((item) =>
                             renderPill(
+                              item.id,
                               item.label,
                               learningMode === item.id,
                               async () => {
@@ -875,6 +986,7 @@ export default function App() {
                               ] as const
                             ).map((item) =>
                               renderPill(
+                                item.id,
                                 item.label,
                                 onlineWeekPattern === item.id,
                                 async () => {
@@ -915,6 +1027,7 @@ export default function App() {
                               { val: 15, label: "15 Min" },
                             ].map((item) =>
                               renderPill(
+                                `online-${item.val}`,
                                 item.label,
                                 onlineOffset === item.val,
                                 async () => {
@@ -947,6 +1060,7 @@ export default function App() {
                               { val: 120, label: "2 Hr" },
                             ].map((item) =>
                               renderPill(
+                                `f2f-${item.val}`,
                                 item.label,
                                 inpersonOffset === item.val,
                                 async () => {
@@ -979,6 +1093,7 @@ export default function App() {
                             ] as const
                           ).map((item) =>
                             renderPill(
+                              item.id,
                               item.label,
                               alarmSound === item.id,
                               async () => {
@@ -1053,6 +1168,10 @@ const s = StyleSheet.create({
     justifyContent: "flex-end",
     backgroundColor: "rgba(0,0,0,0.7)",
   },
+  modalOverlayFull: {
+    justifyContent: "flex-start",
+    backgroundColor: "#0a0a0f",
+  },
   modalSheet: {
     backgroundColor: "#0e0e14",
     borderTopLeftRadius: 24,
@@ -1062,6 +1181,14 @@ const s = StyleSheet.create({
     maxHeight: "88%",
     borderTopWidth: 1,
     borderColor: "rgba(255,255,255,0.06)",
+  },
+  modalSheetFull: {
+    flex: 1,
+    maxHeight: "100%",
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderTopWidth: 0,
+    paddingTop: 48,
   },
   modalHeader: {
     flexDirection: "row",
@@ -1151,7 +1278,7 @@ const s = StyleSheet.create({
   },
   pill: {
     flex: 1,
-    minWidth: "28%",
+    minWidth: "22%",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
@@ -1232,5 +1359,79 @@ const s = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     marginTop: 16,
+  },
+
+  infoText: {
+    color: "#888888",
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  tabHeader: {
+    marginBottom: 12,
+  },
+  tabHeaderLabel: {
+    color: "#555555",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  tabRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#14141c",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.04)",
+  },
+  tabBtnActive: {
+    backgroundColor: "rgba(6,182,212,0.15)",
+    borderColor: "#06b6d4",
+  },
+  tabBtnText: {
+    color: "#888888",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  tabBtnTextActive: {
+    color: "#06b6d4",
+  },
+  refImageContainer: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#161622",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  refImage: {
+    width: "100%",
+    height: "100%",
+  },
+  secondaryBtn: {
+    backgroundColor: "#1a1a26",
+    height: 52,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
+  secondaryBtnText: {
+    color: "#CCCCCC",
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 1,
   },
 });
