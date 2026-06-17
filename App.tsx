@@ -26,7 +26,6 @@ import { getCurrentWeek } from "./utils/weekLogic";
 import {
   requestPermissions,
   scheduleWeekAlarms,
-  scheduleTestAlarm,
 } from "./utils/notifications";
 import WeekBadge from "./components/WeekBadge";
 import DaySelector from "./components/DaySelector";
@@ -263,7 +262,6 @@ export default function App() {
       const granted = await requestPermissions();
       if (granted) {
         await scheduleWeekAlarms();
-        await scheduleTestAlarm();
       }
       checkAlarmStatus();
     })();
