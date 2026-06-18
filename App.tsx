@@ -306,6 +306,12 @@ export default function App() {
     // Re-schedule alarms when app comes back to foreground
     const sub = AppState.addEventListener("change", async (state) => {
       if (state === "active") {
+        const initialized = await isAppInitialized();
+        if (!initialized) {
+          checkAlarmStatus();
+          return;
+        }
+
         const settings = await loadTermSettings();
         setWeekInfo(
           getCurrentWeek(
@@ -578,14 +584,8 @@ export default function App() {
                             ] as const
                           ).map((item) =>
                             renderPill(item.id, item.label, termType === item.id, () => {
-                              const defaultWeeks =
-                                item.id === "semester"
-                                  ? 16
-                                  : item.id === "trimester"
-                                  ? 14
-                                  : 10;
                               setTermType(item.id);
-                              setTotalWeeks(defaultWeeks);
+                              setTotalWeeks(null);
                               if (setupStep < 2) setSetupStep(2);
                             })
                           )}
@@ -634,9 +634,10 @@ export default function App() {
                                 () => {
                                   setLearningMode(item.id);
                                   if (item.id === "blended") {
-                                    setOnlineWeekPattern("even");
+                                    setOnlineWeekPattern(null);
                                     if (setupStep < 4) setSetupStep(4);
                                   } else {
+                                    setOnlineWeekPattern(null);
                                     if (setupStep < 5) setSetupStep(5);
                                   }
                                 }
