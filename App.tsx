@@ -71,10 +71,10 @@ export default function App() {
   const [termType, setTermType] = useState<TermType | null>("trimester");
   const [totalWeeks, setTotalWeeks] = useState<number | null>(14);
   const [learningMode, setLearningMode] = useState<LearningMode | null>("blended");
-  const [onlineOffset, setOnlineOffset] = useState<number>(5);
-  const [inpersonOffset, setInpersonOffset] = useState<number>(15);
-  const [onlineWeekPattern, setOnlineWeekPattern] = useState<OnlineWeekPattern | null>("even");
-  const [alarmSound, setAlarmSound] = useState<AlarmSound | null>("default");
+  const [onlineOffset, setOnlineOffset] = useState<number | null>(null);
+  const [inpersonOffset, setInpersonOffset] = useState<number | null>(null);
+  const [onlineWeekPattern, setOnlineWeekPattern] = useState<OnlineWeekPattern | null>(null);
+  const [alarmSound, setAlarmSound] = useState<AlarmSound | null>(null);
   const [isConfiguringUpload, setIsConfiguringUpload] = useState(false);
   const [weekInfo, setWeekInfo] = useState<WeekInfo | null>(() =>
     getCurrentWeek(now, 14, "blended", "even")
@@ -110,8 +110,8 @@ export default function App() {
         termType!,
         totalWeeks!,
         learningMode!,
-        onlineOffset,
-        inpersonOffset,
+        onlineOffset || 5,
+        inpersonOffset || 15,
         patternToSave,
         soundToSave
       );
@@ -223,6 +223,8 @@ export default function App() {
         setTermType(null);
         setTotalWeeks(null);
         setLearningMode(null);
+        setOnlineOffset(null);
+        setInpersonOffset(null);
         setOnlineWeekPattern(null);
         setAlarmSound(null);
         setSetupStep(1);
@@ -775,7 +777,7 @@ export default function App() {
                       {setupStep >= 7 && (
                         <SectionCard title="UPLOAD YOUR SCHEDULE" stepNum={7}>
                           <Text style={s.infoText}>
-                            Upload a screenshot or photo of your class schedule. Our AI will automatically parse your classes. You can skip this and customize it later.
+                            Upload a screenshot or photo of your class schedule. Kackoo will automatically parse your classes. You can skip this and customize it later.
                           </Text>
 
                           <View style={s.tabHeader}>
@@ -829,7 +831,7 @@ export default function App() {
                             <View style={s.parsingContainer}>
                               <ActivityIndicator size="large" color="#06b6d4" />
                               <Text style={s.parsingText}>
-                                AI is reading your schedule...
+                                Reading your schedule...
                               </Text>
                             </View>
                           ) : (
@@ -891,8 +893,8 @@ export default function App() {
                                 item.id,
                                 defaultWeeks,
                                 learningMode!,
-                                onlineOffset,
-                                inpersonOffset,
+                                onlineOffset || 5,
+                                inpersonOffset || 15,
                                 onlineWeekPattern!,
                                 alarmSound!
                               );
@@ -928,8 +930,8 @@ export default function App() {
                                   termType!,
                                   weeksNum,
                                   learningMode!,
-                                  onlineOffset,
-                                  inpersonOffset,
+                                  onlineOffset || 5,
+                                  inpersonOffset || 15,
                                   onlineWeekPattern!,
                                   alarmSound!
                                 );
@@ -967,8 +969,8 @@ export default function App() {
                                   termType!,
                                   totalWeeks!,
                                   item.id,
-                                  onlineOffset,
-                                  inpersonOffset,
+                                  onlineOffset || 5,
+                                  inpersonOffset || 15,
                                   onlineWeekPattern!,
                                   alarmSound!
                                 );
@@ -1006,8 +1008,8 @@ export default function App() {
                                     termType!,
                                     totalWeeks!,
                                     learningMode!,
-                                    onlineOffset,
-                                    inpersonOffset,
+                                    onlineOffset || 5,
+                                    inpersonOffset || 15,
                                     item.id,
                                     alarmSound!
                                   );
@@ -1040,7 +1042,7 @@ export default function App() {
                                     totalWeeks!,
                                     learningMode!,
                                     item.val,
-                                    inpersonOffset,
+                                    inpersonOffset || 15,
                                     onlineWeekPattern!,
                                     alarmSound!
                                   );
@@ -1072,7 +1074,7 @@ export default function App() {
                                     termType!,
                                     totalWeeks!,
                                     learningMode!,
-                                    onlineOffset,
+                                    onlineOffset || 5,
                                     item.val,
                                     onlineWeekPattern!,
                                     alarmSound!
@@ -1105,8 +1107,8 @@ export default function App() {
                                   termType!,
                                   totalWeeks!,
                                   learningMode!,
-                                  onlineOffset,
-                                  inpersonOffset,
+                                  onlineOffset || 5,
+                                  inpersonOffset || 15,
                                   onlineWeekPattern!,
                                   item.id
                                 );
@@ -1125,7 +1127,7 @@ export default function App() {
                         <View style={s.parsingContainer}>
                           <ActivityIndicator size="large" color="#06b6d4" />
                           <Text style={s.parsingText}>
-                            AI is reading your schedule...
+                            Reading your schedule...
                           </Text>
                         </View>
                       ) : (
