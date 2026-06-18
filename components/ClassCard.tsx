@@ -11,7 +11,7 @@ export default function ClassCard({ cls, weekInfo }: ClassCardProps) {
   if (!weekInfo) return null;
 
   const isOnline = weekInfo.mode === "Online";
-  const accentColor = isOnline ? "#06b6d4" : "#f59e0b";
+  const accentColor = isOnline ? "#D4A006" : "#F59E0B";
 
   // Build the status line
   let statusText: string;
@@ -30,6 +30,8 @@ export default function ClassCard({ cls, weekInfo }: ClassCardProps) {
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 6,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.08)",
       }}
     >
       {/* Accent left border */}
@@ -62,6 +64,10 @@ export default function ClassCard({ cls, weekInfo }: ClassCardProps) {
                 borderRadius: 4,
                 backgroundColor: accentColor,
                 marginRight: 8,
+                shadowColor: accentColor,
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.6,
+                shadowRadius: 4,
               }}
             />
             <Text

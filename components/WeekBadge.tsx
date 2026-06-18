@@ -27,7 +27,7 @@ export default function WeekBadge({ weekInfo }: WeekBadgeProps) {
       style={{
         borderWidth: 1,
         borderColor: isOnline
-          ? "rgba(6, 182, 212, 0.3)"
+          ? "rgba(212, 160, 6, 0.3)"
           : "rgba(245, 158, 11, 0.3)",
       }}
     >

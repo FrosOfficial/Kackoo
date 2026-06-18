@@ -39,14 +39,20 @@ export default function DaySelector({
         className={`p-2.5 rounded-2xl w-[31%] h-[150px] items-center justify-between ${
           isSelected ? "bg-white" : "bg-surface-700"
         }`}
-        style={
+        style={[
           !isSelected && isToday
             ? {
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.2)",
+                borderColor: "rgba(245,158,11,0.4)",
               }
-            : undefined
-        }
+            : undefined,
+          !isSelected
+            ? {
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.08)",
+              }
+            : undefined,
+        ]}
       >
         {/* Header: Day name and today indicator */}
         <View className="items-center">
@@ -60,8 +66,13 @@ export default function DaySelector({
           {isToday && (
             <View
               className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
-                isSelected ? "bg-surface-900" : "bg-cyan-400"
+                isSelected ? "bg-surface-900" : ""
               }`}
+              style={
+                !isSelected
+                  ? { backgroundColor: "#F59E0B" }
+                  : undefined
+              }
             />
           )}
         </View>

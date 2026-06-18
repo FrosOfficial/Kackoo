@@ -829,7 +829,7 @@ export default function App() {
 
                           {isParsing ? (
                             <View style={s.parsingContainer}>
-                              <ActivityIndicator size="large" color="#06b6d4" />
+                              <ActivityIndicator size="large" color="#F59E0B" />
                               <Text style={s.parsingText}>
                                 Reading your schedule...
                               </Text>
@@ -1125,7 +1125,7 @@ export default function App() {
 
                       {isParsing ? (
                         <View style={s.parsingContainer}>
-                          <ActivityIndicator size="large" color="#06b6d4" />
+                          <ActivityIndicator size="large" color="#F59E0B" />
                           <Text style={s.parsingText}>
                             Reading your schedule...
                           </Text>
@@ -1175,17 +1175,17 @@ const s = StyleSheet.create({
   },
   modalOverlayFull: {
     justifyContent: "flex-start",
-    backgroundColor: "#0a0a0f",
+    backgroundColor: "#0A0A0F",
   },
   modalSheet: {
-    backgroundColor: "#0e0e14",
+    backgroundColor: "#0E0E14",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 24,
     maxHeight: "88%",
     borderTopWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
   modalSheetFull: {
     flex: 1,
@@ -1202,7 +1202,7 @@ const s = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    color: "#06b6d4",
+    color: "#F59E0B",
     fontSize: 20,
     fontWeight: "900",
     letterSpacing: 2,
@@ -1217,11 +1217,11 @@ const s = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#1a1a26",
+    backgroundColor: "#1A1A24",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.10)",
   },
   closeBtnText: {
     color: "#FFFFFF",
@@ -1244,7 +1244,7 @@ const s = StyleSheet.create({
     backgroundColor: "#2A2A2A",
   },
   dotCurrent: {
-    backgroundColor: "#06b6d4",
+    backgroundColor: "#F59E0B",
     width: 18,
     borderRadius: 9,
   },
@@ -1254,15 +1254,15 @@ const s = StyleSheet.create({
 
   // Section cards
   sectionCard: {
-    backgroundColor: "#101018",
+    backgroundColor: "#12121A",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.08)",
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
   },
   sectionTitle: {
-    color: "#06b6d4",
+    color: "#F59E0B",
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 1.5,
@@ -1288,13 +1288,13 @@ const s = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1a1a26",
+    backgroundColor: "#1A1A24",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
   pillActive: {
-    backgroundColor: "#06b6d4",
-    borderColor: "#06b6d4",
+    backgroundColor: "#F59E0B",
+    borderColor: "#F59E0B",
   },
   pillText: {
     color: "#CCCCCC",
@@ -1317,13 +1317,13 @@ const s = StyleSheet.create({
 
   // Action buttons
   actionBtn: {
-    backgroundColor: "#06b6d4",
+    backgroundColor: "#F59E0B",
     height: 52,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 8,
-    shadowColor: "#06b6d4",
+    shadowColor: "#F59E0B",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -1334,19 +1334,19 @@ const s = StyleSheet.create({
     height: 56,
   },
   actionBtnText: {
-    color: "#FFFFFF",
+    color: "#0A0A0F",
     fontSize: 13,
     fontWeight: "900",
     letterSpacing: 1.5,
   },
   dangerBtn: {
-    backgroundColor: "#1a1a26",
+    backgroundColor: "#1A1A24",
     height: 52,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
   dangerBtnText: {
     color: "#FF4444",
@@ -1360,7 +1360,7 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   parsingText: {
-    color: "#06b6d4",
+    color: "#F59E0B",
     fontSize: 13,
     fontWeight: "600",
     marginTop: 16,
@@ -1392,13 +1392,13 @@ const s = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#14141c",
+    backgroundColor: "#14141E",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.04)",
+    borderColor: "rgba(255,255,255,0.06)",
   },
   tabBtnActive: {
-    backgroundColor: "rgba(6,182,212,0.15)",
-    borderColor: "#06b6d4",
+    backgroundColor: "rgba(245,158,11,0.15)",
+    borderColor: "#F59E0B",
   },
   tabBtnText: {
     color: "#888888",
@@ -1406,15 +1406,15 @@ const s = StyleSheet.create({
     fontWeight: "700",
   },
   tabBtnTextActive: {
-    color: "#06b6d4",
+    color: "#F59E0B",
   },
   refImageContainer: {
     width: "100%",
     height: 200,
-    backgroundColor: "#161622",
+    backgroundColor: "#16161E",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.08)",
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
@@ -1425,13 +1425,13 @@ const s = StyleSheet.create({
     height: "100%",
   },
   secondaryBtn: {
-    backgroundColor: "#1a1a26",
+    backgroundColor: "#1A1A24",
     height: 52,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
   secondaryBtnText: {
     color: "#CCCCCC",

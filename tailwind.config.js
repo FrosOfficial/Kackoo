@@ -9,19 +9,24 @@ module.exports = {
     extend: {
       colors: {
         surface: {
-          900: "#0a0a0f",
-          800: "#12121a",
-          700: "#1a1a26",
-          600: "#222233",
+          900: "#0A0A0F",
+          800: "#12121A",
+          700: "#1A1A24",
+          600: "#222230",
+        },
+        accent: {
+          DEFAULT: "#F59E0B",
+          dim: "#D97706",
+          bg: "rgba(245, 158, 11, 0.12)",
         },
         online: {
-          DEFAULT: "#06b6d4",
-          dim: "#0e7490",
-          bg: "rgba(6, 182, 212, 0.12)",
+          DEFAULT: "#D4A006",
+          dim: "#A37B04",
+          bg: "rgba(212, 160, 6, 0.12)",
         },
         inperson: {
-          DEFAULT: "#f59e0b",
-          dim: "#b45309",
+          DEFAULT: "#F59E0B",
+          dim: "#B45309",
           bg: "rgba(245, 158, 11, 0.12)",
         },
       },
