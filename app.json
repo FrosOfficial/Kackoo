@@ -37,6 +37,12 @@
         "projectId": "ca3ea4b5-94c7-427b-9c8f-c7fcf38262b7"
       }
     },
-    "owner": "fros"
+    "owner": "fros",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ca3ea4b5-94c7-427b-9c8f-c7fcf38262b7"
+    }
   }
 }
